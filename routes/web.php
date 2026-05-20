@@ -5,7 +5,7 @@ use App\Http\Controllers\Web\GameWebController;
 use Illuminate\Support\Facades\Route;
 
 // Redirect root
-Route::get('/', fn() => redirect()->route('game'));
+Route::get('/', fn() => view('landing'))->name('home');
 
 // User Auth Pages
 Route::get('/login',           fn() => view('auth.login'))->name('login');
