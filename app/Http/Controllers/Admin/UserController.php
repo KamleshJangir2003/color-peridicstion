@@ -17,7 +17,7 @@ class UserController extends Controller
     public function dashboard()
     {
         return response()->json([
-            'total_users'   => User::count(),
+            'total_users'   => User::where('is_admin', false)->count(),
             'total_revenue' => GameBet::sum('amount') - \App\Models\GameResult::sum('total_payout'),
             'pending_deposits'   => Deposit::where('status', 'pending')->count(),
             'pending_withdrawals'=> Withdrawal::where('status', 'pending')->count(),
@@ -28,6 +28,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $users = User::with('wallet')
+            ->where('is_admin', false)
             ->when($request->search, fn($q) => $q->where('phone', 'like', "%{$request->search}%")
                 ->orWhere('name', 'like', "%{$request->search}%"))
             ->latest()

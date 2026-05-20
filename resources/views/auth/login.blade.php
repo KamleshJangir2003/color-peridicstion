@@ -130,21 +130,13 @@
 
     <div id="errorMsg" class="error-msg"></div>
 
-    <!-- QUICK LOGIN HINT -->
-    <div style="background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#94A3B8;">
-        🧪 <strong style="color:#F59E0B;">Test Account:</strong>
-        Phone: <strong style="color:#E2E8F0;">8888888888</strong> &nbsp;|
-        Password: <strong style="color:#E2E8F0;">user@123</strong>
-        <button onclick="quickLogin()" style="float:right;background:#7C3AED;border:none;border-radius:6px;padding:3px 10px;color:#fff;font-size:11px;cursor:pointer;">Quick Login</button>
-    </div>
-
     <!-- LOGIN FORM -->
     <div id="loginForm">
         <div class="form-group">
             <label class="form-label">Mobile Number</label>
             <div class="input-wrap">
                 <i class="fas fa-phone"></i>
-                <input type="tel" id="loginPhone" class="form-control" placeholder="Enter mobile number" value="8888888888">
+                <input type="tel" id="loginPhone" class="form-control" placeholder="Enter mobile number">
             </div>
         </div>
         <div class="form-group">
@@ -205,12 +197,13 @@
             </div>
         </div>
         <div class="form-group">
-            <label class="form-label">Referral Code (Optional)</label>
+            <label class="form-label">Referral Code <span style="color:#EF4444;">*</span></label>
             <div class="input-wrap">
                 <i class="fas fa-gift"></i>
-                <input type="text" id="regReferral" class="form-control" placeholder="Enter referral code"
-                    value="{{ request('ref') }}">
+                <input type="text" id="regReferral" class="form-control" placeholder="Referral code required"
+                    value="{{ request('ref') }}" required>
             </div>
+            <div style="font-size:11px;color:#94A3B8;margin-top:4px;">⚠️ Referral code ke bina account nahi banega</div>
         </div>
         <button class="btn btn-primary" id="registerBtn" onclick="doRegister()">
             <i class="fas fa-user-plus"></i> Create Account
@@ -292,6 +285,13 @@ async function sendOtp() {
 
 async function doRegister() {
     const btn = document.getElementById('registerBtn');
+    const referral = document.getElementById('regReferral').value.trim();
+
+    if (!referral) {
+        showError('Referral code required hai. Bina referral ke account nahi banega.');
+        return;
+    }
+
     btn.disabled = true;
     btn.textContent = 'Creating account...';
     try {

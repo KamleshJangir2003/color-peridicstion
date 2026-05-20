@@ -213,7 +213,6 @@ function showToast(msg, type='success') {
 }
 
 function adminLogout() {
-    if (!confirm('Logout from admin panel?')) return;
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
     window.location.href = '/admin/login';

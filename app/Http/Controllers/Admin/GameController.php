@@ -18,8 +18,13 @@ class GameController extends Controller
             'number' => 'required|integer|between:0,9',
         ]);
 
-        if ($round->status !== 'closed') {
-            return response()->json(['message' => 'Round must be closed first'], 422);
+        // Force close if still open
+        if ($round->status === 'open') {
+            $this->gameEngine->closeRound($round);
+        }
+
+        if ($round->status === 'resulted') {
+            return response()->json(['message' => 'Round already resulted'], 422);
         }
 
         $round->update(['result_type' => 'admin']);

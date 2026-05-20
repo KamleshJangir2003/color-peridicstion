@@ -130,17 +130,24 @@ function selectManualNum(num, el) {
 }
 
 async function setManualResult() {
-    if (selectedManualNum === null) return;
-    // Get latest closed round
-    const data = await AAPI('/game/rounds');
-    const closedRound = (data.data || []).find(r => r.status === 'closed');
-    if (!closedRound) { showToast('No closed round found. Wait for round to close.', 'error'); return; }
+    if (selectedManualNum === null) { showToast('Pehle number select karo', 'error'); return; }
 
-    const res = await AAPI(`/game/rounds/${closedRound.id}/result`, {
+    const data = await AAPI('/game/rounds');
+    // Get latest open or closed round
+    const round = (data.data || []).find(r => r.status === 'closed' || r.status === 'open');
+    if (!round) { showToast('Koi active round nahi hai', 'error'); return; }
+
+    const res = await AAPI(`/game/rounds/${round.id}/result`, {
         method: 'POST',
         body: JSON.stringify({ number: selectedManualNum })
     });
-    showToast(`Result set: ${selectedManualNum}`, 'success');
+
+    if (res.number !== undefined) {
+        showToast(`✅ Result set: ${selectedManualNum} (${res.color})`, 'success');
+    } else {
+        showToast(res.message || 'Failed', 'error');
+    }
+
     loadRounds();
     loadCurrentRound();
 }

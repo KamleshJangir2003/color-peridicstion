@@ -109,7 +109,7 @@
     <!-- STEP 3: SECURITY -->
     <div style="font-size:12px;color:#94A3B8;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 10px;">Step 3 — Security</div>
     <div style="margin-bottom:10px;">
-        <label style="font-size:12px;color:#94A3B8;display:block;margin-bottom:5px;">Withdrawal Password <span style="color:#7C3AED;">(Test: 1234)</span></label>
+        <label style="font-size:12px;color:#94A3B8;display:block;margin-bottom:5px;">Withdrawal Password</label>
         <input type="password" id="wdPwd" class="form-control" placeholder="Enter withdrawal password">
     </div>
     <div style="margin-bottom:16px;">

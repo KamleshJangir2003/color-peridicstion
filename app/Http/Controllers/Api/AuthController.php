@@ -25,7 +25,7 @@ class AuthController extends Controller
             'name'         => 'required|string|max:100',
             'phone'        => 'required|unique:users,phone',
             'password'     => 'required|min:6|confirmed',
-            'referral_code'=> 'nullable|exists:users,referral_code',
+            'referral_code'=> 'required|exists:users,referral_code',
             'otp'          => 'required|string|size:6',
         ]);
 

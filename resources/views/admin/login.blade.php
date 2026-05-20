@@ -38,25 +38,20 @@
         <p>ColorWin Management System</p>
     </div>
 
-    <div class="credentials-hint">
-        <strong>Default Credentials:</strong><br>
-        Phone: <strong>9999999999</strong> &nbsp;|&nbsp; Password: <strong>admin@123</strong>
-    </div>
-
     <div id="errMsg" class="error"></div>
 
     <div class="form-group">
         <label class="form-label">Admin Phone Number</label>
         <div class="input-wrap">
             <i class="fas fa-phone"></i>
-            <input type="tel" id="phone" class="form-control" placeholder="Enter admin phone" value="9999999999">
+            <input type="tel" id="phone" class="form-control" placeholder="Enter admin phone">
         </div>
     </div>
     <div class="form-group">
         <label class="form-label">Password</label>
         <div class="input-wrap">
             <i class="fas fa-lock"></i>
-            <input type="password" id="password" class="form-control" placeholder="Enter password" value="admin@123">
+            <input type="password" id="password" class="form-control" placeholder="Enter password">
         </div>
     </div>
 
