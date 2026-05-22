@@ -10,6 +10,7 @@ use App\Services\OtpService;
 use App\Services\ReferralService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
@@ -24,18 +25,20 @@ class AuthController extends Controller
         $request->validate([
             'name'         => 'required|string|max:100',
             'phone'        => 'required|unique:users,phone',
+            'email'        => 'required|email|unique:users,email',
             'password'     => 'required|min:6|confirmed',
             'referral_code'=> 'required|exists:users,referral_code',
             'otp'          => 'required|string|size:6',
         ]);
 
-        if (!$this->otpService->verify($request->phone, $request->otp, 'register')) {
+        if (!$this->otpService->verify($request->email, $request->otp, 'register')) {
             return response()->json(['message' => 'Invalid or expired OTP'], 422);
         }
 
         $user = User::create([
             'name'          => $request->name,
             'phone'         => $request->phone,
+            'email'         => $request->email,
             'password'      => Hash::make($request->password),
             'referral_code' => strtoupper(Str::random(8)),
             'referred_by'   => $request->referral_code,
@@ -87,15 +90,18 @@ class AuthController extends Controller
     public function sendOtp(Request $request)
     {
         $request->validate([
-            'phone' => 'required',
+            'email' => 'required|email',
             'type'  => 'required|in:register,login,forgot_password,withdrawal',
         ]);
 
-        $otp = $this->otpService->generate($request->phone, $request->type);
+        $otp = $this->otpService->generate($request->email, $request->type);
 
-        // TODO: Send via SMS provider
-        // For dev, return otp directly
-        return response()->json(['message' => 'OTP sent', 'otp' => $otp]);
+        Mail::raw("Your ColorWin OTP is: {$otp}\n\nValid for 10 minutes. Do not share with anyone.", function ($msg) use ($request, $otp) {
+            $msg->to($request->email)
+                ->subject('ColorWin OTP Verification');
+        });
+
+        return response()->json(['message' => 'OTP sent to your email']);
     }
 
     public function forgotPassword(Request $request)

@@ -171,6 +171,13 @@
             </div>
         </div>
         <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <div class="input-wrap">
+                <i class="fas fa-envelope"></i>
+                <input type="email" id="regEmail" class="form-control" placeholder="Enter your email">
+            </div>
+        </div>
+        <div class="form-group">
             <label class="form-label">OTP</label>
             <div style="display:flex; gap:8px;">
                 <div class="input-wrap" style="flex:1;">
@@ -181,6 +188,7 @@
                     Send OTP
                 </button>
             </div>
+            <div style="font-size:11px;color:#94A3B8;margin-top:4px;">📧 OTP aapki email pe bheja jayega</div>
         </div>
         <div class="form-group">
             <label class="form-label">Password</label>
@@ -260,26 +268,35 @@ async function doLogin() {
 let otpCooldown = 0;
 async function sendOtp() {
     if (otpCooldown > 0) return;
-    const phone = document.getElementById('regPhone').value;
-    if (!phone) { showError('Enter mobile number first'); return; }
+    const email = document.getElementById('regEmail').value.trim();
+    if (!email) { showError('Pehle email address enter karein'); return; }
     const btn = document.getElementById('sendOtpBtn');
-    const res = await fetch('/api/otp/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ phone, type: 'register' })
-    });
-    const data = await res.json();
-    if (res.ok) {
-        // Dev mode: auto-fill OTP
-        if (data.otp) document.getElementById('regOtp').value = data.otp;
-        otpCooldown = 60;
-        const interval = setInterval(() => {
-            otpCooldown--;
-            btn.textContent = otpCooldown > 0 ? `${otpCooldown}s` : 'Send OTP';
-            if (otpCooldown <= 0) clearInterval(interval);
-        }, 1000);
-    } else {
-        showError(data.message || 'Failed to send OTP');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    try {
+        const res = await fetch('/api/otp/send', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ email, type: 'register' })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            otpCooldown = 60;
+            const interval = setInterval(() => {
+                otpCooldown--;
+                btn.textContent = otpCooldown > 0 ? `${otpCooldown}s` : 'Send OTP';
+                btn.disabled = otpCooldown > 0;
+                if (otpCooldown <= 0) clearInterval(interval);
+            }, 1000);
+        } else {
+            showError(data.message || 'OTP send karne mein error');
+            btn.disabled = false;
+            btn.textContent = 'Send OTP';
+        }
+    } catch(e) {
+        showError('Network error. Try again.');
+        btn.disabled = false;
+        btn.textContent = 'Send OTP';
     }
 }
 
@@ -301,6 +318,7 @@ async function doRegister() {
             body: JSON.stringify({
                 name:                  document.getElementById('regName').value,
                 phone:                 document.getElementById('regPhone').value,
+                email:                 document.getElementById('regEmail').value,
                 otp:                   document.getElementById('regOtp').value,
                 password:              document.getElementById('regPassword').value,
                 password_confirmation: document.getElementById('regPasswordConfirm').value,
