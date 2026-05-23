@@ -23,6 +23,13 @@
         .btn-login:hover{background:rgba(124,58,237,.15);}
         .btn-signup{background:var(--primary);border:none;border-radius:8px;padding:7px 14px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .2s;white-space:nowrap;}
         .btn-signup:hover{background:#9D5CF6;}
+        .btn-download{background:linear-gradient(135deg,var(--green),#16A34A);border:none;border-radius:8px;padding:7px 14px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .2s;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}
+        .btn-download:hover{opacity:.85;transform:translateY(-1px);}
+        .btn-download-mobile{display:none;background:linear-gradient(135deg,var(--green),#16A34A);border:none;border-radius:12px;padding:13px 22px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .2s;align-items:center;gap:8px;justify-content:center;}
+        @media(max-width:640px){
+            .btn-download{display:none;}
+            .btn-download-mobile{display:inline-flex;width:100%;}
+        }
         @media(max-width:400px){
             .btn-login{padding:6px 10px;font-size:12px;}
             .btn-signup{padding:6px 10px;font-size:12px;}
@@ -161,6 +168,7 @@
 <nav>
     <div class="logo"><img src="/colorlogo-removebg-preview.png" alt="ColorWin" style="height:40px;width:auto;"></div>
     <div class="nav-btns">
+        <a href="/app/download" class="btn-download"><i class="fas fa-download"></i> Download App</a>
         <a href="/login" class="btn-login">Login</a>
         <a href="/login" class="btn-signup">Register Now</a>
     </div>
@@ -207,6 +215,9 @@
             </a>
             <a href="#how" class="btn-sec">
                 <i class="fas fa-play-circle"></i> How to Play
+            </a>
+            <a href="/app/download" class="btn-download-mobile">
+                <i class="fas fa-download"></i> Download App
             </a>
         </div>
 
