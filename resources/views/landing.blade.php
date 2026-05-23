@@ -159,7 +159,7 @@
 
 <!-- NAVBAR -->
 <nav>
-    <div class="logo">🎮 ColorWin</div>
+    <div class="logo"><img src="/colorlogo-removebg-preview.png" alt="ColorWin" style="height:40px;width:auto;"></div>
     <div class="nav-btns">
         <a href="/login" class="btn-login">Login</a>
         <a href="/login" class="btn-signup">Register Now</a>
@@ -412,7 +412,7 @@
 
 <!-- FOOTER -->
 <footer>
-    <div style="font-size:18px;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:12px;">🎮 ColorWin</div>
+    <div style="margin-bottom:12px;"><img src="/colorlogo-removebg-preview.png" alt="ColorWin" style="height:40px;width:auto;"></div>
     <div style="margin-bottom:12px;">
         <a href="/login">Play Now</a>
         <a href="#how">How to Play</a>

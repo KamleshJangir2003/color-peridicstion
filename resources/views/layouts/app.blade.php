@@ -15,7 +15,8 @@
         }
         body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh;}
         .navbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 16px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
-        .navbar-brand{font-size:19px;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+        .navbar-brand{font-size:19px;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;display:flex;align-items:center;gap:8px;}
+        .navbar-brand img{height:36px;width:auto;}
         .wallet-chip{background:rgba(124,58,237,.2);border:1px solid var(--primary);border-radius:20px;padding:5px 12px;font-size:13px;font-weight:700;color:var(--gold);display:flex;align-items:center;gap:6px;}
         .logout-btn{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:7px 11px;color:#EF4444;font-size:13px;cursor:pointer;}
         .logout-btn:hover{background:rgba(239,68,68,.3);}
@@ -54,7 +55,9 @@
 
 <!-- NAVBAR -->
 <nav class="navbar">
-    <span class="navbar-brand">🎮 ColorWin</span>
+    <span class="navbar-brand">
+        <img src="/colorlogo-removebg-preview.png" alt="ColorWin Logo">ColorWin
+    </span>
     <div style="display:flex;align-items:center;gap:8px;">
         <div class="wallet-chip">
             <i class="fas fa-wallet" style="font-size:12px;"></i>

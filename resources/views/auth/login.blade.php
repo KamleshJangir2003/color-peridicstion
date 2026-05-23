@@ -119,7 +119,7 @@
 <body>
 <div class="auth-box">
     <div class="auth-logo">
-        <h1>🎮 ColorWin</h1>
+        <img src="/colorlogo-removebg-preview.png" alt="ColorWin" style="height:60px;width:auto;">
         <p>India's #1 Color Prediction Game</p>
     </div>
 
