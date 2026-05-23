@@ -73,6 +73,10 @@ class AuthController extends Controller
             return response()->json(['message' => 'Account blocked'], 403);
         }
 
+        if ($user->is_admin) {
+            return response()->json(['message' => 'Invalid credentials'], 401);
+        }
+
         $user->update(['last_login_at' => now(), 'device_id' => $request->header('X-Device-ID')]);
 
         \App\Models\UserLogin::create([

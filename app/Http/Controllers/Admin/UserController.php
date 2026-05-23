@@ -61,6 +61,26 @@ class UserController extends Controller
         return response()->json(['message' => 'Wallet updated', 'balance' => $this->walletService->getBalance($user->id)]);
     }
 
+    public function getSettings()
+    {
+        $keys = ['round_duration','min_bet','max_bet','withdrawal_min','withdrawal_daily_limit',
+                 'deposit_min','referral_commission_l1','referral_commission_l2',
+                 'daily_bonus_base','upi_id','tron_address','qr_image'];
+        $settings = [];
+        foreach ($keys as $k) {
+            $settings[$k] = \App\Models\Setting::get($k);
+        }
+        return response()->json(['settings' => $settings]);
+    }
+
+    public function uploadQr(Request $request)
+    {
+        $request->validate(['qr_image' => 'required|image|max:2048']);
+        $path = $request->file('qr_image')->store('qr', 'public');
+        \App\Models\Setting::set('qr_image', $path);
+        return response()->json(['message' => 'QR uploaded', 'path' => $path]);
+    }
+
     public function saveSetting(Request $request)
     {
         $request->validate(['key' => 'required|string', 'value' => 'required']);

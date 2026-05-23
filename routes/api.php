@@ -16,6 +16,7 @@ Route::post('/login',           [AuthController::class, 'login']);
 Route::post('/admin/login',     [AuthController::class, 'adminLogin']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::get('/public/stats',     [\App\Http\Controllers\Api\PublicController::class, 'liveStats']);
+Route::get('/payment-settings', [\App\Http\Controllers\Api\PublicController::class, 'paymentSettings']);
 
 // Authenticated user routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -67,6 +68,8 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::post('/game/result-type',            [Admin\GameController::class, 'setResultType']);
 
     // Settings
+    Route::get('/settings',          [Admin\UserController::class, 'getSettings']);
     Route::post('/settings',         [Admin\UserController::class, 'saveSetting']);
+    Route::post('/settings/qr',      [Admin\UserController::class, 'uploadQr']);
     Route::post('/change-password',  [Admin\UserController::class, 'changePassword']);
 });

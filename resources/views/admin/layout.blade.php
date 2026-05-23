@@ -249,6 +249,20 @@
 const ADMIN_TOKEN = localStorage.getItem('admin_token');
 if (!ADMIN_TOKEN) window.location.href = '/admin/login';
 
+// Verify token is valid AND belongs to an admin on every page load
+(async () => {
+    try {
+        const res = await fetch('/api/admin/dashboard', {
+            headers: {'Authorization':'Bearer '+ADMIN_TOKEN,'Accept':'application/json'}
+        });
+        if (res.status === 401 || res.status === 403) {
+            localStorage.removeItem('admin_token');
+            localStorage.removeItem('admin_user');
+            window.location.href = '/admin/login';
+        }
+    } catch(e) {}
+})();
+
 const adminUser = JSON.parse(localStorage.getItem('admin_user') || '{}');
 if (adminUser.name) {
     document.getElementById('adminName').textContent = adminUser.name;
@@ -258,7 +272,14 @@ if (adminUser.name) {
 const AAPI = (path, opts={}) => fetch('/api/admin' + path, {
     headers: {'Authorization':'Bearer '+ADMIN_TOKEN,'Content-Type':'application/json','Accept':'application/json'},
     ...opts
-}).then(r => r.json());
+}).then(r => {
+    if (r.status === 401 || r.status === 403) {
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
+        window.location.href = '/admin/login';
+    }
+    return r.json();
+});
 
 function showToast(msg, type='success') {
     const t = document.createElement('div');

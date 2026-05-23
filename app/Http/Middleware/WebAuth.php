@@ -9,8 +9,9 @@ class WebAuth
 {
     public function handle(Request $request, Closure $next)
     {
-        // Pages are protected client-side via JS token check
-        // Server just serves the blade views
+        // Server-side: just serve the blade view.
+        // Real auth is enforced on every API call via auth:sanctum + admin middleware.
+        // The JS layer redirects to login if no token is found in localStorage.
         return $next($request);
     }
 }

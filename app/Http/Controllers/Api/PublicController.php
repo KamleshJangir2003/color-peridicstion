@@ -5,10 +5,20 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\GameBet;
 use App\Models\GameResult;
+use App\Models\Setting;
 use App\Models\WalletTransaction;
 
 class PublicController extends Controller
 {
+    public function paymentSettings()
+    {
+        return response()->json([
+            'upi_id'       => Setting::get('upi_id', 'colorwin@upi'),
+            'tron_address' => Setting::get('tron_address'),
+            'qr_image'     => Setting::get('qr_image'),
+        ]);
+    }
+
     public function liveStats()
     {
         // Recent bets (all users)

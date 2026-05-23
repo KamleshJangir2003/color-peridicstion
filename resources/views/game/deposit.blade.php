@@ -73,8 +73,11 @@
 
     <!-- UPI DETAILS (shown when UPI selected) -->
     <div id="upiDetails" style="background:var(--bg); border-radius:12px; padding:14px; margin-bottom:16px; text-align:center;">
+        <div id="qrWrap" style="display:none; margin-bottom:10px;">
+            <img id="qrImg" src="" style="width:160px;height:160px;object-fit:contain;border-radius:10px;border:1px solid var(--border);">
+        </div>
         <div style="font-size:12px; color:var(--muted); margin-bottom:6px;">Pay to UPI ID</div>
-        <div style="font-size:18px; font-weight:800; color:var(--gold); margin-bottom:8px;" id="upiId">colorwin@upi</div>
+        <div style="font-size:18px; font-weight:800; color:var(--gold); margin-bottom:8px;" id="upiId">Loading...</div>
         <button onclick="copyUpi()" style="background:rgba(124,58,237,0.2); border:1px solid var(--primary); border-radius:8px; padding:6px 16px; color:var(--primary); font-size:12px; cursor:pointer;">
             📋 Copy UPI ID
         </button>
@@ -127,6 +130,17 @@ const API = (path, opts={}) => fetch('/api' + path, {
 }).then(r => r.json());
 
 let selectedMethod = 'upi';
+let paySettings = {};
+
+async function loadPaymentSettings() {
+    const data = await fetch('/api/payment-settings').then(r => r.json());
+    paySettings = data;
+    document.getElementById('upiId').textContent = data.upi_id || 'N/A';
+    if (data.qr_image) {
+        document.getElementById('qrImg').src = '/storage/' + data.qr_image;
+        document.getElementById('qrWrap').style.display = 'block';
+    }
+}
 
 function selectMethod(method, el) {
     selectedMethod = method;
@@ -134,9 +148,14 @@ function selectMethod(method, el) {
     el.classList.add('selected');
     document.getElementById('upiDetails').style.display = method === 'upi' || method === 'qr' ? 'block' : 'none';
     if (method === 'tron_usdt') {
-        document.getElementById('upiId').textContent = 'TRX: TColorWin123456789USDT';
+        document.getElementById('upiId').textContent = paySettings.tron_address || 'N/A';
+        document.getElementById('qrWrap').style.display = 'none';
     } else {
-        document.getElementById('upiId').textContent = 'colorwin@upi';
+        document.getElementById('upiId').textContent = paySettings.upi_id || 'N/A';
+        if (paySettings.qr_image) {
+            document.getElementById('qrImg').src = '/storage/' + paySettings.qr_image;
+            document.getElementById('qrWrap').style.display = 'block';
+        }
     }
 }
 
@@ -209,5 +228,6 @@ async function loadDepositHistory() {
 }
 
 loadDepositHistory();
+loadPaymentSettings();
 </script>
 @endpush

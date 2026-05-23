@@ -70,7 +70,7 @@
         </div>
         <div class="form-group">
             <label class="form-label">UPI ID</label>
-            <input type="text" id="s-upi_id" class="form-control" value="colorwin@upi">
+            <input type="text" id="s-upi_id" class="form-control" placeholder="yourname@upi">
         </div>
         <div class="form-group">
             <label class="form-label">TRON Wallet</label>
@@ -79,6 +79,23 @@
         <button class="btn btn-primary" style="width:100%;" onclick="saveSettings(['daily_bonus_base','upi_id','tron_address'])">
             💾 Save Bonus Settings
         </button>
+    </div>
+</div>
+
+<!-- PAYMENT QR CODE -->
+<div class="card" style="margin-bottom:14px;">
+    <div style="font-size:13px;font-weight:700;margin-bottom:14px;">📷 Payment QR Code</div>
+    <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+        <div id="qrPreviewWrap" style="display:none;">
+            <img id="qrPreview" src="" style="width:140px;height:140px;object-fit:contain;border-radius:10px;border:1px solid var(--border);">
+        </div>
+        <div style="flex:1;min-width:200px;">
+            <div class="form-group">
+                <label class="form-label">Upload QR Image</label>
+                <input type="file" id="qrFile" accept="image/*" class="form-control" style="padding:10px;" onchange="previewQr(this)">
+            </div>
+            <button class="btn btn-primary" style="width:100%;" onclick="uploadQr()">📤 Upload QR Code</button>
+        </div>
     </div>
 </div>
 
@@ -102,6 +119,47 @@
 
 @push('scripts')
 <script>
+async function loadSettings() {
+    const data = await AAPI('/settings');
+    const s = data.settings || {};
+    ['round_duration','min_bet','max_bet','withdrawal_min','withdrawal_daily_limit',
+     'deposit_min','referral_commission_l1','referral_commission_l2','daily_bonus_base','upi_id','tron_address'
+    ].forEach(k => {
+        const el = document.getElementById('s-' + k);
+        if (el && s[k] !== undefined) el.value = s[k];
+    });
+    if (s.qr_image) {
+        document.getElementById('qrPreview').src = '/storage/' + s.qr_image;
+        document.getElementById('qrPreviewWrap').style.display = 'block';
+    }
+}
+
+function previewQr(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById('qrPreview').src = e.target.result;
+            document.getElementById('qrPreviewWrap').style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+async function uploadQr() {
+    const file = document.getElementById('qrFile').files[0];
+    if (!file) { showToast('Select a QR image first', 'error'); return; }
+    const formData = new FormData();
+    formData.append('qr_image', file);
+    const res = await fetch('/api/admin/settings/qr', {
+        method: 'POST',
+        headers: {'Authorization':'Bearer '+ADMIN_TOKEN,'Accept':'application/json'},
+        body: formData
+    });
+    const data = await res.json();
+    if (res.ok) showToast('QR uploaded!', 'success');
+    else showToast(data.message || 'Failed', 'error');
+}
+
 async function saveSettings(keys) {
     const promises = keys.map(key => {
         const val = document.getElementById('s-' + key)?.value;
@@ -134,5 +192,7 @@ async function changePassword() {
         showToast(data.message || 'Failed', 'error');
     }
 }
+
+loadSettings();
 </script>
 @endpush
