@@ -1,37 +1,34 @@
 @extends('admin.layout')
-@section('title', 'Users Management')
+@section('title', 'Users')
 
 @section('content')
 
 <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px;flex-wrap:wrap;">
         <span style="font-size:14px;font-weight:700;">All Users</span>
-        <div style="display:flex;gap:8px;">
-            <input type="text" id="searchInput" class="form-control" placeholder="Search name / phone..." style="width:220px;" oninput="searchUsers()">
-        </div>
+        <input type="text" id="searchInput" class="form-control" placeholder="Search name / phone..." style="width:200px;max-width:100%;" oninput="searchUsers()">
     </div>
     <div class="table-wrap">
         <table>
             <thead>
                 <tr>
-                    <th>#</th><th>Name</th><th>Phone</th><th>VIP</th>
-                    <th>Main Bal</th><th>Winning Bal</th><th>Referral</th>
-                    <th>Joined</th><th>Status</th><th>Actions</th>
+                    <th>User</th><th>Phone</th><th>VIP</th>
+                    <th>Main</th><th>Win</th><th>Joined</th><th>Status</th><th>Act</th>
                 </tr>
             </thead>
             <tbody id="usersTable">
-                <tr><td colspan="10" style="text-align:center;color:var(--muted);padding:24px;">Loading...</td></tr>
+                <tr><td colspan="8" style="text-align:center;color:var(--muted);padding:24px;">Loading...</td></tr>
             </tbody>
         </table>
     </div>
-    <div id="pagination" style="display:flex;justify-content:center;gap:8px;margin-top:16px;"></div>
+    <div id="pagination" style="display:flex;justify-content:center;gap:6px;margin-top:14px;flex-wrap:wrap;"></div>
 </div>
 
-<!-- WALLET UPDATE MODAL -->
+<!-- WALLET MODAL -->
 <div class="modal-overlay" id="walletModal">
     <div class="modal">
         <div class="modal-title">
-            💰 Update Wallet - <span id="modalUserName"></span>
+            💰 Update Wallet — <span id="modalUserName"></span>
             <button class="modal-close" onclick="closeModal('walletModal')">✕</button>
         </div>
         <div class="form-group">
@@ -55,9 +52,9 @@
         </div>
         <div class="form-group">
             <label class="form-label">Note (Optional)</label>
-            <input type="text" id="walletNote" class="form-control" placeholder="Reason for update">
+            <input type="text" id="walletNote" class="form-control" placeholder="Reason">
         </div>
-        <div style="display:flex;gap:8px;margin-top:4px;">
+        <div style="display:flex;gap:8px;">
             <button class="btn btn-primary" style="flex:1;" onclick="submitWalletUpdate()">Update Wallet</button>
             <button class="btn btn-outline" onclick="closeModal('walletModal')">Cancel</button>
         </div>
@@ -68,9 +65,7 @@
 
 @push('scripts')
 <script>
-let currentPage = 1;
-let searchQuery = '';
-let selectedUserId = null;
+let currentPage = 1, searchQuery = '', selectedUserId = null;
 
 async function loadUsers(page = 1) {
     currentPage = page;
@@ -80,36 +75,24 @@ async function loadUsers(page = 1) {
 
     document.getElementById('usersTable').innerHTML = users.length
         ? users.map(u => `<tr>
-            <td style="color:var(--muted);font-size:12px;">${u.id}</td>
-            <td>
-                <div style="font-weight:600;">${u.name}</div>
-                <div style="font-size:11px;color:var(--muted);">${u.email || ''}</div>
-            </td>
-            <td style="font-family:monospace;">${u.phone}</td>
-            <td><span class="badge badge-gold">VIP ${u.vip_level || 0}</span></td>
-            <td style="font-weight:600;">₹${parseFloat(u.wallet?.main_balance || 0).toFixed(2)}</td>
-            <td style="color:var(--green);font-weight:600;">₹${parseFloat(u.wallet?.winning_balance || 0).toFixed(2)}</td>
-            <td style="font-family:monospace;font-size:12px;color:var(--primary);">${u.referral_code || '--'}</td>
+            <td><div style="font-weight:600;">${u.name}</div><div style="font-size:10px;color:var(--muted);">${u.email || ''}</div></td>
+            <td style="font-family:monospace;font-size:12px;">${u.phone}</td>
+            <td><span class="badge badge-gold">V${u.vip_level || 0}</span></td>
+            <td style="font-weight:600;">₹${parseFloat(u.wallet?.main_balance || 0).toFixed(0)}</td>
+            <td style="color:var(--green);font-weight:600;">₹${parseFloat(u.wallet?.winning_balance || 0).toFixed(0)}</td>
             <td style="font-size:11px;color:var(--muted);">${new Date(u.created_at).toLocaleDateString('en-IN')}</td>
-            <td>
-                <span class="badge ${u.is_blocked ? 'badge-red' : 'badge-green'}">
-                    ${u.is_blocked ? 'Blocked' : 'Active'}
-                </span>
-            </td>
-            <td>
-                <button class="btn btn-sm btn-outline" onclick="openWalletModal(${u.id}, '${u.name}')" title="Update Wallet">💰</button>
-                <button class="btn btn-sm ${u.is_blocked ? 'btn-green' : 'btn-red'}" onclick="toggleBlock(${u.id})" style="margin-left:4px;" title="${u.is_blocked ? 'Unblock' : 'Block'}">
-                    ${u.is_blocked ? '🔓' : '🔒'}
-                </button>
+            <td><span class="badge ${u.is_blocked ? 'badge-red' : 'badge-green'}">${u.is_blocked ? 'Blocked' : 'Active'}</span></td>
+            <td style="white-space:nowrap;">
+                <button class="btn btn-sm btn-outline" onclick="openWalletModal(${u.id}, '${u.name}')" title="Wallet">💰</button>
+                <button class="btn btn-sm ${u.is_blocked ? 'btn-green' : 'btn-red'}" onclick="toggleBlock(${u.id})" style="margin-left:3px;" title="${u.is_blocked ? 'Unblock' : 'Block'}">${u.is_blocked ? '🔓' : '🔒'}</button>
             </td>
         </tr>`).join('')
-        : '<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:24px;">No users found</td></tr>';
+        : '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:24px;">No users found</td></tr>';
 
-    // Pagination
     if (data.last_page > 1) {
         let html = '';
         for (let i = 1; i <= data.last_page; i++) {
-            html += `<button class="btn ${i === data.current_page ? 'btn-primary' : 'btn-outline'}" style="padding:6px 12px;" onclick="loadUsers(${i})">${i}</button>`;
+            html += `<button class="btn ${i === data.current_page ? 'btn-primary' : 'btn-outline'}" style="padding:5px 11px;" onclick="loadUsers(${i})">${i}</button>`;
         }
         document.getElementById('pagination').innerHTML = html;
     }
@@ -123,7 +106,7 @@ function searchUsers() {
 }
 
 async function toggleBlock(userId) {
-    const data = await AAPI(`/users/${userId}/toggle-block`, { method: 'POST', body: JSON.stringify({}) });
+    const data = await AAPI(`/users/${userId}/toggle-block`, { method:'POST', body:JSON.stringify({}) });
     showToast(data.is_blocked ? 'User blocked' : 'User unblocked', data.is_blocked ? 'error' : 'success');
     loadUsers(currentPage);
 }
@@ -136,24 +119,20 @@ function openWalletModal(userId, name) {
     document.getElementById('walletModal').classList.add('open');
 }
 
-function closeModal(id) {
-    document.getElementById(id).classList.remove('open');
-}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
 async function submitWalletUpdate() {
     const amount = document.getElementById('walletAmount').value;
     if (!amount || amount <= 0) { showToast('Enter valid amount', 'error'); return; }
-
     const data = await AAPI(`/users/${selectedUserId}/wallet`, {
         method: 'POST',
         body: JSON.stringify({
-            amount:      parseFloat(amount),
-            type:        document.getElementById('walletAction').value,
+            amount: parseFloat(amount),
+            type: document.getElementById('walletAction').value,
             wallet_type: document.getElementById('walletType').value,
-            note:        document.getElementById('walletNote').value,
+            note: document.getElementById('walletNote').value,
         })
     });
-
     if (data.message) {
         showToast(data.message, 'success');
         closeModal('walletModal');
