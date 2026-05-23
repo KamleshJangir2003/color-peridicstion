@@ -107,13 +107,8 @@
     </div>
 
     <!-- STEP 3: SECURITY -->
-    <div style="font-size:12px;color:#94A3B8;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 10px;">Step 3 — Security</div>
-    <div style="margin-bottom:10px;">
-        <label style="font-size:12px;color:#94A3B8;display:block;margin-bottom:5px;">Withdrawal Password</label>
-        <input type="password" id="wdPwd" class="form-control" placeholder="Enter withdrawal password">
-    </div>
+    <div style="font-size:12px;color:#94A3B8;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 10px;">Step 3 — OTP Verification</div>
     <div style="margin-bottom:16px;">
-        <label style="font-size:12px;color:#94A3B8;display:block;margin-bottom:5px;">OTP Verification</label>
         <div class="otp-wrap">
             <input type="text" id="wdOtp" class="form-control" placeholder="6-digit OTP" maxlength="6">
             <button class="send-otp" id="otpBtn" onclick="sendOtp()">Send OTP</button>
@@ -140,13 +135,14 @@ const API = (p, o={}) => fetch('/api'+p, {
 }).then(r=>r.json());
 
 let method = 'bank';
-let phone  = '';
+let userEmail = '';
 
-// Load phone
+// Load profile
 API('/profile').then(d => {
+    userEmail = d.email || '';
     phone = d.phone || '';
     if (phone) document.getElementById('otpNote').textContent =
-        'OTP will be sent to: ' + phone.replace(/(\d{2})\d{6}(\d{2})/, '$1xxxxxx$2');
+        'OTP will be sent to your registered email';
 });
 
 // Load balance
@@ -187,7 +183,7 @@ async function sendOtp() {
         const r = await fetch('/api/otp/send', {
             method:'POST',
             headers:{'Authorization':'Bearer '+localStorage.getItem('token'),'Content-Type':'application/json','Accept':'application/json'},
-            body: JSON.stringify({phone: phone, type:'withdrawal'})
+            body: JSON.stringify({email: userEmail, type:'withdrawal'})
         });
         const d = await r.json();
         if (d.otp) {
@@ -228,11 +224,9 @@ function getAcc() {
 // Submit
 async function doWithdraw() {
     const amt = parseFloat(document.getElementById('wdAmt').value);
-    const pwd = document.getElementById('wdPwd').value.trim();
     const otp = document.getElementById('wdOtp').value.trim();
 
     if (!amt || amt < 200)        { showToast('Minimum ₹200', 'error'); return; }
-    if (!pwd)                      { showToast('Enter withdrawal password', 'error'); return; }
     if (otp.length !== 6)          { showToast('Enter 6-digit OTP', 'error'); return; }
 
     const acc = getAcc();
@@ -247,15 +241,11 @@ async function doWithdraw() {
     try {
         const d = await API('/withdrawals', {
             method:'POST',
-            body: JSON.stringify({
-                amount: amt, method, account_details: acc,
-                withdrawal_password: pwd, otp
-            })
+            body: JSON.stringify({ amount: amt, method, account_details: acc, otp })
         });
         if (d.id) {
             showToast('✅ Withdrawal submitted!', 'success');
             document.getElementById('wdAmt').value = '';
-            document.getElementById('wdPwd').value = '';
             document.getElementById('wdOtp').value = '';
             document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
             API('/wallet/balance').then(d=>{ document.getElementById('winBal').textContent='₹'+parseFloat(d.winning||0).toFixed(2); });

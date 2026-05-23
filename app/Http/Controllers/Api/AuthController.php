@@ -94,18 +94,29 @@ class AuthController extends Controller
     public function sendOtp(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email' => 'required_without:phone|email|nullable',
+            'phone' => 'required_without:email|nullable',
             'type'  => 'required|in:register,login,forgot_password,withdrawal',
         ]);
 
-        $otp = $this->otpService->generate($request->email, $request->type);
+        $target = $request->email ?: $request->phone;
 
-        Mail::raw("Your ColorWin OTP is: {$otp}\n\nValid for 10 minutes. Do not share with anyone.", function ($msg) use ($request, $otp) {
-            $msg->to($request->email)
-                ->subject('ColorWin OTP Verification');
-        });
+        // For phone-based OTP, find user email to send mail
+        $sendTo = $request->email;
+        if (!$sendTo && $request->phone) {
+            $user = User::where('phone', $request->phone)->first();
+            $sendTo = $user?->email;
+        }
 
-        return response()->json(['message' => 'OTP sent to your email']);
+        $otp = $this->otpService->generate($target, $request->type);
+
+        if ($sendTo) {
+            Mail::raw("Your ColorWin OTP is: {$otp}\n\nValid for 10 minutes. Do not share with anyone.", function ($msg) use ($sendTo) {
+                $msg->to($sendTo)->subject('ColorWin OTP Verification');
+            });
+        }
+
+        return response()->json(['message' => 'OTP sent']);
     }
 
     public function forgotPassword(Request $request)
@@ -116,7 +127,9 @@ class AuthController extends Controller
             'password' => 'required|min:6|confirmed',
         ]);
 
-        if (!$this->otpService->verify($request->phone, $request->otp, 'forgot_password')) {
+        // OTP was generated against email (from sendOtp), verify with email
+        $user = User::where('phone', $request->phone)->firstOrFail();
+        if (!$this->otpService->verify($user->email, $request->otp, 'forgot_password')) {
             return response()->json(['message' => 'Invalid or expired OTP'], 422);
         }
 

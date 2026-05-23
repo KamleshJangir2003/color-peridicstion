@@ -230,7 +230,7 @@ const API = (path, opts={}) => fetch('/api' + path, {
 let currentRound = null;
 let timerInterval = null;
 let selType = null, selVal = null;
-const ROUND_SECS = 30;
+let ROUND_SECS = 30; // updated from server on each round load
 
 // ── WALLET ────────────────────────────────────────────────────
 async function loadWallet() {
@@ -246,11 +246,22 @@ async function loadWallet() {
 async function loadRound() {
     try {
         const d = await API('/game/round');
+        const isNewRound = !currentRound || currentRound.id !== d.id;
         currentRound = d;
-        document.getElementById('roundId').textContent = d.round_id;
-        document.getElementById('roundStatusTxt').innerHTML = '<span style="color:#22C55E;">● Live</span>';
-        startTimer(d.seconds_left);
-        if (d.seconds_left > 5) enableBetting();
+
+        // Calculate exact seconds left from server ends_at (avoids client drift)
+        const secsLeft = d.ends_at
+            ? Math.max(0, Math.round((new Date(d.ends_at) - Date.now()) / 1000))
+            : d.seconds_left;
+
+        if (isNewRound) {
+            document.getElementById('roundId').textContent = d.round_id;
+            document.getElementById('roundStatusTxt').innerHTML = '<span style="color:#22C55E;">● Live</span>';
+            ROUND_SECS = Math.max(secsLeft, 1);
+        }
+
+        startTimer(secsLeft);
+        if (secsLeft > 5) enableBetting();
         else disableBetting();
     } catch(e) {
         document.getElementById('roundId').textContent = 'Error - Refresh';
@@ -438,6 +449,26 @@ loadRound();
 loadHistory();
 loadMyBets();
 
+// Wallet + bets refresh every 10s
 setInterval(() => { loadWallet(); loadMyBets(); }, 10000);
+
+// Re-sync round from server every 15s to prevent timer drift
+setInterval(async () => {
+    if (!timerInterval) return; // timer already stopped, loadRound will be called
+    try {
+        const d = await API('/game/round');
+        if (!currentRound || currentRound.id !== d.id) {
+            // New round started — full reload
+            currentRound = d;
+            ROUND_SECS = 30;
+            document.getElementById('roundId').textContent = d.round_id;
+            const secsLeft = d.ends_at ? Math.max(0, Math.round((new Date(d.ends_at) - Date.now()) / 1000)) : d.seconds_left;
+            ROUND_SECS = secsLeft;
+            startTimer(secsLeft);
+            if (secsLeft > 5) enableBetting(); else disableBetting();
+            loadHistory(); loadMyBets();
+        }
+    } catch(e) {}
+}, 15000);
 </script>
 @endpush

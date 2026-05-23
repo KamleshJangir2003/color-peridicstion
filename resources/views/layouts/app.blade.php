@@ -56,7 +56,7 @@
 <!-- NAVBAR -->
 <nav class="navbar">
     <span class="navbar-brand">
-        <img src="/colorlogo-removebg-preview.png" alt="ColorWin Logo">ColorWin
+        <img src="/colorlogo-removebg-preview.png" alt="ColorWin Logo">
     </span>
     <div style="display:flex;align-items:center;gap:8px;">
         <div class="wallet-chip">

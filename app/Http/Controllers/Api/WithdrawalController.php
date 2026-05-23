@@ -8,8 +8,6 @@ use App\Models\Withdrawal;
 use App\Services\OtpService;
 use App\Services\WalletService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-
 class WithdrawalController extends Controller
 {
     public function __construct(
@@ -23,26 +21,17 @@ class WithdrawalController extends Controller
         $dailyLimit = (float) Setting::get('withdrawal_daily_limit', 10000);
 
         $request->validate([
-            'amount'             => "required|numeric|min:{$minLimit}",
-            'method'             => 'required|in:bank,upi,tron',
-            'account_details'    => 'required|array',
-            'withdrawal_password'=> 'required|string',
-            'otp'                => 'required|digits:6',
+            'amount'          => "required|numeric|min:{$minLimit}",
+            'method'          => 'required|in:bank,upi,tron',
+            'account_details' => 'required|array',
+            'otp'             => 'required|digits:6',
         ]);
 
         $user = $request->user();
 
-        // Check withdrawal password
-        if (!$user->withdrawal_password) {
-            return response()->json(['message' => 'Withdrawal password not set. Please set it in Profile first.'], 422);
-        }
-
-        if (!Hash::check($request->withdrawal_password, $user->withdrawal_password)) {
-            return response()->json(['message' => 'Incorrect withdrawal password'], 422);
-        }
-
         // Verify OTP
-        if (!$this->otpService->verify($user->phone, $request->otp, 'withdrawal')) {
+        $otpTarget = $user->email ?: $user->phone;
+        if (!$this->otpService->verify($otpTarget, $request->otp, 'withdrawal')) {
             return response()->json(['message' => 'Invalid or expired OTP'], 422);
         }
 

@@ -147,11 +147,6 @@
         <span class="label">Transaction History</span>
         <i class="fas fa-chevron-right arrow"></i>
     </a>
-    <a href="#" class="menu-item" onclick="changeWithdrawalPwd()">
-        <div class="icon" style="background:rgba(245,158,11,.15);">🔐</div>
-        <span class="label">Withdrawal Password</span>
-        <i class="fas fa-chevron-right arrow"></i>
-    </a>
     <a href="#" class="menu-item" onclick="doLogout()" style="color:var(--red);">
         <div class="icon" style="background:rgba(239,68,68,.15);">🚪</div>
         <span class="label" style="color:var(--red);">Logout</span>
@@ -260,12 +255,6 @@ function shareRef() {
         navigator.clipboard.writeText(url);
         showToast('Referral link copied!', 'success');
     }
-}
-
-function changeWithdrawalPwd() {
-    const pwd = prompt('Enter new withdrawal password (4-6 digits):');
-    if (!pwd) return;
-    showToast('Feature coming soon!', 'error');
 }
 
 function doLogout() {

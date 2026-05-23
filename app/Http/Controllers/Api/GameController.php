@@ -44,7 +44,7 @@ class GameController extends Controller
         return response()->json([
             'id'           => $round->id,
             'round_id'     => $round->round_id,
-            'ends_at'      => $round->ends_at,
+            'ends_at'      => $round->ends_at->toISOString(),
             'seconds_left' => $secondsLeft,
             'status'       => $round->status,
         ]);
