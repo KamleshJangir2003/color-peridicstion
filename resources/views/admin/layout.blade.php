@@ -185,8 +185,8 @@
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
-        <h2>🛡️ ColorWin</h2>
-        <p>Admin Panel</p>
+        <img src="/colorlogo-removebg-preview.png" alt="ColorWin" style="height:48px;object-fit:contain;display:block;margin-bottom:4px;">
+        <p style="font-size:11px;color:var(--muted);">Admin Panel</p>
     </div>
     <nav class="sidebar-nav">
         <div class="nav-section">Main</div>
@@ -234,13 +234,10 @@
     <div class="topbar">
         <div class="topbar-left">
             <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-            <span class="topbar-title">@yield('title', 'Dashboard')</span>
         </div>
         <div class="topbar-right">
             <span style="font-size:12px;color:var(--muted);" id="topbarTime"></span>
-            <a href="/game" target="_blank" style="color:var(--muted);font-size:13px;text-decoration:none;">
-                <i class="fas fa-external-link-alt"></i>
-            </a>
+            <img src="/colorlogo-removebg-preview.png" alt="ColorWin" style="height:32px;object-fit:contain;">
         </div>
     </div>
     <div class="page-content">
