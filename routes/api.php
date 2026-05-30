@@ -18,6 +18,10 @@ Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::get('/public/stats',     [\App\Http\Controllers\Api\PublicController::class, 'liveStats']);
 Route::get('/payment-settings', [\App\Http\Controllers\Api\PublicController::class, 'paymentSettings']);
 
+// Payment & Payout Callbacks (CSRF exempt - external provider calls)
+Route::post('/payment/callback', [\App\Http\Controllers\Api\CallbackController::class, 'paymentCallback']);
+Route::post('/payout/callback',  [\App\Http\Controllers\Api\CallbackController::class, 'payoutCallback']);
+
 // Authenticated user routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
