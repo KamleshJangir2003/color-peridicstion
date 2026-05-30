@@ -489,7 +489,7 @@ async function loadLiveBets() {
             return `
             <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid rgba(51,65,85,.4);gap:8px;">
                 <div style="display:flex;align-items:center;gap:10px;min-width:0;">
-                    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#9D5CF6);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0;">${b.name[0]}</div>
+                    <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#9D5CF6);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;flex-shrink:0;">${(b.name||'?')[0].toUpperCase()}</div>
                     <div style="min-width:0;">
                         <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.name}</div>
                         <div style="font-size:11px;color:${color};font-weight:600;margin-top:1px;">${betLabel}</div>
