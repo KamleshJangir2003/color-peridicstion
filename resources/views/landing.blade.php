@@ -166,7 +166,7 @@
 
 <!-- NAVBAR -->
 <nav>
-    <div class="logo"><img src="/colorlogo-removebg-preview.png" alt="ColorWin" style="height:40px;width:auto;"></div>
+    <div class="logo"><img src="{{ asset('colorlogo-removebg-preview.png') }}" alt="ColorWin" style="height:40px;width:auto;"></div>
     <div class="nav-btns">
         <a href="/app/download" class="btn-download"><i class="fas fa-download"></i> Download App</a>
         <a href="/login" class="btn-login">Login</a>
@@ -423,7 +423,7 @@
 
 <!-- FOOTER -->
 <footer>
-    <div style="margin-bottom:12px;"><img src="/colorlogo-removebg-preview.png" alt="ColorWin" style="height:40px;width:auto;"></div>
+    <div style="margin-bottom:12px;"><img src="{{ asset('colorlogo-removebg-preview.png') }}" alt="ColorWin" style="height:40px;width:auto;"></div>
     <div style="margin-bottom:12px;">
         <a href="/login">Play Now</a>
         <a href="#how">How to Play</a>
