@@ -354,8 +354,8 @@ function quickLogin() {
     doLogin();
 }
 
-// Auto-clear old token and check
-localStorage.removeItem('token');
+// Redirect if already logged in
+if (localStorage.getItem('token')) window.location.replace('/game');
 </script>
 </body>
 </html>

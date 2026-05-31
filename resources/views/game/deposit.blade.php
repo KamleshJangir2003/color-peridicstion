@@ -3,7 +3,7 @@
 
 @push('styles')
 <style>
-.method-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.method-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
 .method-card {
     background: var(--bg);
     border: 2px solid var(--border);
@@ -19,7 +19,6 @@
 }
 .method-card .icon { font-size: 28px; margin-bottom: 6px; }
 .method-card .name { font-size: 12px; font-weight: 600; }
-
 .amount-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
 .amount-card {
     background: var(--bg);
@@ -37,7 +36,6 @@
     color: var(--primary);
     background: rgba(124,58,237,0.1);
 }
-
 .deposit-history-item {
     display: flex;
     justify-content: space-between;
@@ -46,6 +44,15 @@
     border-bottom: 1px solid var(--border);
 }
 .deposit-history-item:last-child { border-bottom: none; }
+.info-box {
+    background: rgba(124,58,237,0.08);
+    border: 1px solid rgba(124,58,237,0.3);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 16px;
+}
 </style>
 @endpush
 
@@ -61,26 +68,16 @@
             <div class="icon">📱</div>
             <div class="name">UPI</div>
         </div>
-        <div class="method-card" onclick="selectMethod('qr', this)">
-            <div class="icon">📷</div>
-            <div class="name">QR Code</div>
-        </div>
-        <div class="method-card" onclick="selectMethod('tron_usdt', this)">
-            <div class="icon">🔷</div>
-            <div class="name">USDT</div>
+        <div class="method-card" onclick="selectMethod('bank', this)">
+            <div class="icon">🏦</div>
+            <div class="name">Bank Transfer</div>
         </div>
     </div>
 
-    <!-- UPI DETAILS (shown when UPI selected) -->
-    <div id="upiDetails" style="background:var(--bg); border-radius:12px; padding:14px; margin-bottom:16px; text-align:center;">
-        <div id="qrWrap" style="display:none; margin-bottom:10px;">
-            <img id="qrImg" src="" style="width:160px;height:160px;object-fit:contain;border-radius:10px;border:1px solid var(--border);">
-        </div>
-        <div style="font-size:12px; color:var(--muted); margin-bottom:6px;">Pay to UPI ID</div>
-        <div style="font-size:18px; font-weight:800; color:var(--gold); margin-bottom:8px;" id="upiId">Loading...</div>
-        <button onclick="copyUpi()" style="background:rgba(124,58,237,0.2); border:1px solid var(--primary); border-radius:8px; padding:6px 16px; color:var(--primary); font-size:12px; cursor:pointer;">
-            📋 Copy UPI ID
-        </button>
+    <!-- INFO -->
+    <div class="info-box">
+        <i class="fas fa-info-circle" style="color:var(--primary);"></i>
+        After clicking <b>Pay Now</b>, you will be redirected to the secure payment gateway. Amount will be credited automatically after successful payment.
     </div>
 
     <!-- AMOUNT -->
@@ -94,20 +91,8 @@
         <input type="number" id="depositAmount" class="form-control" placeholder="Or enter custom amount" min="100">
     </div>
 
-    <!-- TRANSACTION ID -->
-    <div class="form-group">
-        <label class="form-label">Transaction ID / UTR Number</label>
-        <input type="text" id="txnId" class="form-control" placeholder="Enter transaction ID after payment">
-    </div>
-
-    <!-- SCREENSHOT -->
-    <div class="form-group">
-        <label class="form-label">Upload Screenshot (Optional)</label>
-        <input type="file" id="screenshot" accept="image/*" class="form-control" style="padding:10px;">
-    </div>
-
     <button class="btn btn-primary" id="depositBtn" onclick="submitDeposit()">
-        <i class="fas fa-paper-plane"></i> Submit Deposit Request
+        <i class="fas fa-lock"></i> Pay Now via MvPay
     </button>
 </div>
 
@@ -124,39 +109,18 @@
 @push('scripts')
 <script>
 if (!localStorage.getItem('token')) window.location.href = '/login';
+
 const API = (path, opts={}) => fetch('/api' + path, {
-    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token'), 'Accept': 'application/json' },
+    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token'), 'Accept': 'application/json', 'Content-Type': 'application/json' },
     ...opts
 }).then(r => r.json());
 
 let selectedMethod = 'upi';
-let paySettings = {};
-
-async function loadPaymentSettings() {
-    const data = await fetch('/api/payment-settings').then(r => r.json());
-    paySettings = data;
-    document.getElementById('upiId').textContent = data.upi_id || 'N/A';
-    if (data.qr_image) {
-        document.getElementById('qrImg').src = '/storage/' + data.qr_image;
-        document.getElementById('qrWrap').style.display = 'block';
-    }
-}
 
 function selectMethod(method, el) {
     selectedMethod = method;
     document.querySelectorAll('.method-card').forEach(c => c.classList.remove('selected'));
     el.classList.add('selected');
-    document.getElementById('upiDetails').style.display = method === 'upi' || method === 'qr' ? 'block' : 'none';
-    if (method === 'tron_usdt') {
-        document.getElementById('upiId').textContent = paySettings.tron_address || 'N/A';
-        document.getElementById('qrWrap').style.display = 'none';
-    } else {
-        document.getElementById('upiId').textContent = paySettings.upi_id || 'N/A';
-        if (paySettings.qr_image) {
-            document.getElementById('qrImg').src = '/storage/' + paySettings.qr_image;
-            document.getElementById('qrWrap').style.display = 'block';
-        }
-    }
 }
 
 function selectDepositAmount(amt, el) {
@@ -165,49 +129,35 @@ function selectDepositAmount(amt, el) {
     document.getElementById('depositAmount').value = amt;
 }
 
-function copyUpi() {
-    navigator.clipboard.writeText(document.getElementById('upiId').textContent);
-    showToast('UPI ID copied!', 'success');
-}
-
 async function submitDeposit() {
     const amount = document.getElementById('depositAmount').value;
-    const txnId  = document.getElementById('txnId').value;
-    const file   = document.getElementById('screenshot').files[0];
 
     if (!amount || amount < 100) { showToast('Minimum deposit ₹100', 'error'); return; }
-    if (!txnId) { showToast('Enter transaction ID', 'error'); return; }
 
     const btn = document.getElementById('depositBtn');
     btn.disabled = true;
-    btn.textContent = 'Submitting...';
-
-    const formData = new FormData();
-    formData.append('amount', amount);
-    formData.append('method', selectedMethod);
-    formData.append('transaction_id', txnId);
-    if (file) formData.append('screenshot', file);
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
 
     try {
-        const res = await fetch('/api/deposits', {
+        const data = await API('/deposits', {
             method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + localStorage.getItem('token'), 'Accept': 'application/json' },
-            body: formData
+            body: JSON.stringify({ amount: parseFloat(amount), method: selectedMethod })
         });
-        const data = await res.json();
-        if (res.ok) {
-            showToast('Deposit request submitted! Pending approval.', 'success');
-            document.getElementById('txnId').value = '';
-            document.getElementById('depositAmount').value = '';
+
+        if (data.payment_url) {
+            showToast('Redirecting to payment gateway...', 'success');
+            setTimeout(() => { window.location.href = data.payment_url; }, 1000);
+        } else if (data.deposit) {
+            showToast('Deposit request created! Awaiting payment confirmation.', 'success');
             loadDepositHistory();
         } else {
-            showToast(data.message || 'Failed', 'error');
+            showToast(data.message || (data.errors ? Object.values(data.errors).flat().join(' | ') : 'Failed'), 'error');
         }
     } catch(e) {
         showToast('Network error', 'error');
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Deposit Request';
+        btn.innerHTML = '<i class="fas fa-lock"></i> Pay Now via MvPay';
     }
 }
 
@@ -215,11 +165,12 @@ async function loadDepositHistory() {
     const data = await API('/deposits');
     const deposits = data.data || [];
     const statusBadge = { pending: 'badge-gold', approved: 'badge-green', rejected: 'badge-red' };
+    const methodIcon  = { upi: '📱', bank: '🏦', qr: '📷' };
     document.getElementById('depositHistory').innerHTML = deposits.length
         ? deposits.map(d => `
             <div class="deposit-history-item">
                 <div>
-                    <div style="font-size:13px; font-weight:600;">₹${d.amount} via ${d.method.toUpperCase()}</div>
+                    <div style="font-size:13px; font-weight:600;">${methodIcon[d.method]||''} ₹${d.amount} via ${d.method.toUpperCase()}</div>
                     <div style="font-size:11px; color:var(--muted);">${new Date(d.created_at).toLocaleString('en-IN')}</div>
                 </div>
                 <span class="badge ${statusBadge[d.status]}">${d.status}</span>
@@ -228,6 +179,5 @@ async function loadDepositHistory() {
 }
 
 loadDepositHistory();
-loadPaymentSettings();
 </script>
 @endpush

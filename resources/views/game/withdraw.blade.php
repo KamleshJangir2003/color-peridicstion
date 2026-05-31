@@ -116,8 +116,12 @@
         <div style="font-size:11px;color:#94A3B8;margin-top:4px;" id="otpNote"></div>
     </div>
 
+    <div style="background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.3);border-radius:10px;padding:12px;font-size:12px;color:#94A3B8;margin-bottom:14px;">
+        <i class="fas fa-info-circle" style="color:#7C3AED;"></i>
+        Withdrawal will be processed automatically via MvPay. Amount will be transferred to your account within 24 hours.
+    </div>
     <button onclick="doWithdraw()" id="wdBtn" style="width:100%;background:linear-gradient(135deg,#7C3AED,#9D5CF6);border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:800;color:#fff;cursor:pointer;">
-        <i class="fas fa-arrow-up"></i> Submit Withdrawal Request
+        <i class="fas fa-arrow-up"></i> Withdraw via MvPay
     </button>
 </div>
 
@@ -176,6 +180,10 @@ function setAmt(a, el) {
 let cd = 0;
 async function sendOtp() {
     if (cd > 0) return;
+    if (!userEmail) {
+        showToast('Profile load nahi hua, dobara try karo', 'error');
+        return;
+    }
     const btn = document.getElementById('otpBtn');
     btn.disabled = true;
     btn.textContent = 'Sending...';
@@ -186,11 +194,13 @@ async function sendOtp() {
             body: JSON.stringify({email: userEmail, type:'withdrawal'})
         });
         const d = await r.json();
-        if (d.otp) {
-            document.getElementById('wdOtp').value = d.otp;
-            showToast('OTP auto-filled: ' + d.otp, 'success');
+        if (r.ok) {
+            showToast('OTP sent to ' + userEmail, 'success');
         } else {
-            showToast('OTP sent!', 'success');
+            showToast(d.message || 'OTP send failed', 'error');
+            btn.disabled = false;
+            btn.textContent = 'Send OTP';
+            return;
         }
         cd = 60;
         const iv = setInterval(()=>{
@@ -243,12 +253,12 @@ async function doWithdraw() {
             method:'POST',
             body: JSON.stringify({ amount: amt, method, account_details: acc, otp })
         });
-        if (d.id) {
-            showToast('✅ Withdrawal submitted!', 'success');
+        if (d.withdrawal) {
+            showToast('✅ Withdrawal submitted! Processing via MvPay.', 'success');
             document.getElementById('wdAmt').value = '';
             document.getElementById('wdOtp').value = '';
             document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
-            API('/wallet/balance').then(d=>{ document.getElementById('winBal').textContent='₹'+parseFloat(d.winning||0).toFixed(2); });
+            API('/wallet/balance').then(b=>{ document.getElementById('winBal').textContent='₹'+parseFloat(b.winning||0).toFixed(2); });
             loadHist();
         } else {
             showToast(d.message || (d.errors ? Object.values(d.errors).flat().join(' | ') : 'Failed'), 'error');
