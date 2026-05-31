@@ -39,7 +39,7 @@ class MvPayService
     {
         $params = [
             'merchant_id' => $this->merchantId,
-            'order_id'    => (string) $data['order_id'],
+            'no'          => (string) $data['order_id'],
             'amount'      => (string) $data['amount'],
             'notify_url'  => url('/api/payment/callback'),
             'return_url'  => $data['return_url'] ?? url('/'),
@@ -55,7 +55,7 @@ class MvPayService
     {
         $params = [
             'merchant_id' => $this->merchantId,
-            'order_id'    => $orderId,
+            'no'          => $orderId,
         ];
         $params['sign'] = $this->generateSign($params);
 
@@ -66,14 +66,14 @@ class MvPayService
     public function createPayout(array $data): array
     {
         $params = [
-            'merchant_id'    => $this->merchantId,
-            'order_id'       => (string) $data['order_id'],
-            'amount'         => (string) $data['amount'],
-            'bank_account'   => $data['bank_account'],
-            'bank_ifsc'      => $data['bank_ifsc'] ?? '',
-            'account_name'   => $data['account_name'],
-            'notify_url'     => url('/api/payout/callback'),
-            'remark'         => $data['remark'] ?? 'Withdrawal',
+            'merchant_id'  => $this->merchantId,
+            'no'           => (string) $data['order_id'],
+            'amount'       => (string) $data['amount'],
+            'bank_account' => $data['bank_account'],
+            'bank_ifsc'    => $data['bank_ifsc'] ?? '',
+            'account_name' => $data['account_name'],
+            'notify_url'   => url('/api/payout/callback'),
+            'remark'       => $data['remark'] ?? 'Withdrawal',
         ];
         $params['sign'] = $this->generateSign($params);
 
@@ -85,7 +85,7 @@ class MvPayService
     {
         $params = [
             'merchant_id' => $this->merchantId,
-            'order_id'    => $orderId,
+            'no'          => $orderId,
         ];
         $params['sign'] = $this->generateSign($params);
 

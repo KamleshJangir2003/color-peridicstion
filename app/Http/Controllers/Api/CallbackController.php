@@ -27,11 +27,9 @@ class CallbackController extends Controller
             return response()->json(['message' => 'Invalid signature'], 403);
         }
 
-        $orderId       = $request->input('order_id');
+        $orderId       = $request->input('no') ?? $request->input('order_id');
         $status        = $request->input('status');
         $transactionId = $request->input('transaction_id');
-
-        $deposit = Deposit::where('id', $orderId)
             ->orWhere('transaction_id', $orderId)
             ->first();
 
@@ -72,7 +70,7 @@ class CallbackController extends Controller
             return response()->json(['message' => 'Invalid signature'], 403);
         }
 
-        $orderId       = $request->input('order_id');
+        $orderId       = $request->input('no') ?? $request->input('order_id');
         $status        = $request->input('status');
         $transactionId = $request->input('transaction_id');
 
