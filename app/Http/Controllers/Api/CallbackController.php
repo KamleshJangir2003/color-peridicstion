@@ -5,27 +5,27 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
 use App\Models\Withdrawal;
+use App\Services\MvPayService;
 use App\Services\WalletService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class CallbackController extends Controller
 {
-    public function __construct(private WalletService $walletService) {}
+    public function __construct(
+        private WalletService $walletService,
+        private MvPayService $mvPayService
+    ) {}
 
-    /**
-     * Payment (Deposit) Callback
-     * URL: POST /api/payment/callback
-     *
-     * Expected params from payment provider:
-     * - order_id      : deposit ID ya transaction reference
-     * - status        : "success" | "failed"
-     * - amount        : amount in rupees
-     * - transaction_id: payment provider ka transaction ID
-     */
+    // POST /api/payment/callback
     public function paymentCallback(Request $request)
     {
-        Log::info('Payment Callback Received', $request->all());
+        Log::info('Payment Callback', $request->all());
+
+        if (!$this->mvPayService->verifySign($request->all())) {
+            Log::warning('Payment Callback: Invalid signature', $request->all());
+            return response()->json(['message' => 'Invalid signature'], 403);
+        }
 
         $orderId       = $request->input('order_id');
         $status        = $request->input('status');
@@ -52,7 +52,7 @@ class CallbackController extends Controller
                 $deposit->user_id,
                 $deposit->amount,
                 'main',
-                'Deposit via payment gateway',
+                'Deposit via MvPay',
                 $transactionId
             );
         } else {
@@ -62,18 +62,15 @@ class CallbackController extends Controller
         return response()->json(['message' => 'OK'], 200);
     }
 
-    /**
-     * Payout (Withdrawal) Callback
-     * URL: POST /api/payout/callback
-     *
-     * Expected params from payout provider:
-     * - order_id      : withdrawal ID ya reference
-     * - status        : "success" | "failed"
-     * - transaction_id: payout provider ka transaction ID
-     */
+    // POST /api/payout/callback
     public function payoutCallback(Request $request)
     {
-        Log::info('Payout Callback Received', $request->all());
+        Log::info('Payout Callback', $request->all());
+
+        if (!$this->mvPayService->verifySign($request->all())) {
+            Log::warning('Payout Callback: Invalid signature', $request->all());
+            return response()->json(['message' => 'Invalid signature'], 403);
+        }
 
         $orderId       = $request->input('order_id');
         $status        = $request->input('status');
@@ -92,7 +89,6 @@ class CallbackController extends Controller
         if ($status === 'success') {
             $withdrawal->update(['status' => 'approved']);
         } else {
-            // Payout fail hua toh balance wapas karo
             $withdrawal->update(['status' => 'rejected']);
             $this->walletService->credit(
                 $withdrawal->user_id,

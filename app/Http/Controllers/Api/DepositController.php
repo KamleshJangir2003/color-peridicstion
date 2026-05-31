@@ -4,32 +4,39 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Deposit;
+use App\Services\MvPayService;
 use Illuminate\Http\Request;
 
 class DepositController extends Controller
 {
+    public function __construct(private MvPayService $mvPayService) {}
+
     public function store(Request $request)
     {
         $request->validate([
-            'amount'         => 'required|numeric|min:100',
-            'method'         => 'required|in:upi,qr,tron_usdt',
-            'transaction_id' => 'nullable|string',
-            'screenshot'     => 'nullable|image|max:2048',
+            'amount' => 'required|numeric|min:100',
+            'method' => 'required|in:upi,qr,bank',
         ]);
-
-        $path = $request->hasFile('screenshot')
-            ? $request->file('screenshot')->store('deposits', 'public')
-            : null;
 
         $deposit = Deposit::create([
-            'user_id'        => $request->user()->id,
-            'amount'         => $request->amount,
-            'method'         => $request->method,
-            'transaction_id' => $request->transaction_id,
-            'screenshot'     => $path,
+            'user_id' => $request->user()->id,
+            'amount'  => $request->amount,
+            'method'  => $request->method,
+            'status'  => 'pending',
         ]);
 
-        return response()->json($deposit, 201);
+        $response = $this->mvPayService->createPayment([
+            'order_id'   => $deposit->id,
+            'amount'     => $deposit->amount,
+            'remark'     => 'Deposit #' . $deposit->id,
+            'return_url' => url('/'),
+        ]);
+
+        return response()->json([
+            'deposit'     => $deposit,
+            'payment_url' => $response['pay_url'] ?? $response['url'] ?? null,
+            'mvpay'       => $response,
+        ], 201);
     }
 
     public function index(Request $request)

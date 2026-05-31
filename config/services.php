@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'mvpay' => [
+        'merchant_id' => env('MVPAY_MERCHANT_ID'),
+        'secret_key'  => env('MVPAY_SECRET_KEY'),
+        'base_url'    => env('MVPAY_BASE_URL', 'https://www.mv-pay.org'),
+    ],
+
 ];
