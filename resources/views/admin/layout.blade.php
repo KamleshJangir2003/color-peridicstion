@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>@yield('title', 'Admin') - ColorWin</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         *{margin:0;padding:0;box-sizing:border-box;}
@@ -185,7 +186,7 @@
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
-        <img src="/colorlogo-removebg-preview.png" alt="ColorWin" style="height:48px;object-fit:contain;display:block;margin-bottom:4px;">
+        <img src="{{ asset('colorlogo-removebg-preview.png') }}" alt="ColorWin" style="height:48px;object-fit:contain;display:block;margin-bottom:4px;">
         <p style="font-size:11px;color:var(--muted);">Admin Panel</p>
     </div>
     <nav class="sidebar-nav">
@@ -237,7 +238,7 @@
         </div>
         <div class="topbar-right">
             <span style="font-size:12px;color:var(--muted);" id="topbarTime"></span>
-            <img src="/colorlogo-removebg-preview.png" alt="ColorWin" style="height:32px;object-fit:contain;">
+            <img src="{{ asset('colorlogo-removebg-preview.png') }}" alt="ColorWin" style="height:32px;object-fit:contain;">
         </div>
     </div>
     <div class="page-content">

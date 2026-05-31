@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - ColorWin</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
@@ -119,7 +120,7 @@
 <body>
 <div class="auth-box">
     <div class="auth-logo">
-        <img src="/colorlogo-removebg-preview.png" alt="ColorWin" style="height:60px;width:auto;">
+        <img src="{{ asset('colorlogo-removebg-preview.png') }}" alt="ColorWin" style="height:60px;width:auto;">
         <p>India's #1 Color Prediction Game</p>
     </div>
 

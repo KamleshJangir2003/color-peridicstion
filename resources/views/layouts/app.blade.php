@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>@yield('title', 'ColorWin') - ColorWin</title>
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         *{margin:0;padding:0;box-sizing:border-box;}
@@ -56,7 +57,7 @@
 <!-- NAVBAR -->
 <nav class="navbar">
     <span class="navbar-brand">
-        <img src="/colorlogo-removebg-preview.png" alt="ColorWin Logo">
+        <img src="{{ asset('colorlogo-removebg-preview.png') }}" alt="ColorWin Logo">
     </span>
     <div style="display:flex;align-items:center;gap:8px;">
         <div class="wallet-chip">
