@@ -66,7 +66,7 @@ class GameController extends Controller
                 'bet_value' => $b->bet_value,
                 'bet_type'  => $b->bet_type,
                 'amount'    => $b->amount,
-                'placed_at' => $b->created_at->format('H:i:s'),
+                'placed_at' => $b->created_at->setTimezone('Asia/Kolkata')->format('d M Y, h:i:s A'),
             ]);
 
         // Summary grouped by bet_value
