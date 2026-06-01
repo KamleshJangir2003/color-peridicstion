@@ -48,11 +48,14 @@ class MvPayService
             'no'          => (string) $data['order_id'],
             'amount'      => (string) (int) $data['amount'],
         ];
-        $params = array_merge($signParams, [
-            'notify_url' => url('/api/payment/callback'),
-            'return_url' => $data['return_url'] ?? url('/deposit'),
-            'remark'     => $data['remark'] ?? 'Deposit',
-        ]);
+        $params = [
+            'merchant_id' => $this->merchantId,
+            'no'          => (string) $data['order_id'],
+            'amount'      => (string) (int) $data['amount'],
+            'notify_url'  => url('/api/payment/callback'),
+            'return_url'  => $data['return_url'] ?? url('/deposit'),
+            'remark'      => $data['remark'] ?? 'Deposit',
+        ];
         $params['sign'] = $this->generateSign($signParams);
 
         return $this->post('/Transfer/index', $params);
@@ -79,14 +82,16 @@ class MvPayService
             'no'          => (string) $data['order_id'],
             'amount'      => (string) (int) $data['amount'],
         ];
-        $params = array_merge($signParams, [
-            'account'    => $data['bank_account'],
-            'name'       => $data['account_name'],
-            'notify_url' => url('/api/payout/callback'),
-            'remark'     => $data['remark'] ?? 'Withdrawal',
-        ]);
+        $params = [
+            'merchant_id' => $this->merchantId,
+            'no'          => (string) $data['order_id'],
+            'amount'      => (string) (int) $data['amount'],
+            'account'     => $data['bank_account'],
+            'name'        => $data['account_name'],
+            'notify_url'  => url('/api/payout/callback'),
+            'remark'      => $data['remark'] ?? 'Withdrawal',
+        ];
 
-        // Only send ifsc_code for bank transfers, not UPI
         if (!empty($data['bank_ifsc'])) {
             $params['ifsc_code'] = $data['bank_ifsc'];
         }

@@ -35,13 +35,23 @@ class WithdrawalController extends Controller
         $details = $withdrawal->account_details;
         $method  = $withdrawal->method;
 
+        if ($withdrawal->amount < 100) {
+            return response()->json(['message' => 'Minimum withdrawal amount is ₹100'], 422);
+        }
+
+        $ifsc = $method === 'bank' ? ($details['ifsc'] ?? $details['ifsc_code'] ?? '') : '';
+
+        if ($method === 'bank' && empty($ifsc)) {
+            return response()->json(['message' => 'IFSC code is required for bank withdrawal'], 422);
+        }
+
         $payout = $this->mvPayService->createPayout([
             'order_id'     => (string) $withdrawal->id,
             'amount'       => $withdrawal->amount,
             'bank_account' => $method === 'upi'
                                 ? ($details['upi_id'] ?? '')
                                 : ($details['account_number'] ?? ''),
-            'bank_ifsc'    => $method === 'bank' ? ($details['ifsc'] ?? null) : null,
+            'bank_ifsc'    => $ifsc ?: null,
             'account_name' => $details['name'] ?? $withdrawal->user->name,
             'remark'       => 'Withdrawal #' . $withdrawal->id,
         ]);

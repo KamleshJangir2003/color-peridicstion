@@ -18,7 +18,7 @@ class WithdrawalController extends Controller
 
     public function store(Request $request)
     {
-        $minLimit   = (float) Setting::get('withdrawal_min', 5);
+        $minLimit   = (float) Setting::get('withdrawal_min', 100);
         $dailyLimit = (float) Setting::get('withdrawal_daily_limit', 10000);
 
         $request->validate([
