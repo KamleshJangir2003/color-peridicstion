@@ -98,9 +98,19 @@ function viewAccDetails(details) {
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
 async function approveWd(id) {
-    if (!confirm('Approve? Make sure payment is sent.')) return;
-    await AAPI(`/withdrawals/${id}/approve`, { method:'POST', body:JSON.stringify({}) });
-    showToast('Withdrawal approved!', 'success');
+    if (!confirm('Approve? Gateway payout will be sent now.')) return;
+    try {
+        const res = await AAPI(`/withdrawals/${id}/approve`, { method:'POST', body:JSON.stringify({}) });
+        if (res.message && res.message.toLowerCase().includes('failed')) {
+            showToast('❌ ' + res.message, 'error');
+        } else if (res.gateway) {
+            showToast('✅ Payout sent! ' + (res.gateway.message || ''), 'success');
+        } else {
+            showToast(res.message || '✅ Approved!', 'success');
+        }
+    } catch(e) {
+        showToast('❌ Request failed: ' + e.message, 'error');
+    }
     loadWithdrawals(wdPage);
 }
 async function rejectWd(id) {

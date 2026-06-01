@@ -7,6 +7,7 @@ use App\Models\Withdrawal;
 use App\Services\MvPayService;
 use App\Services\WalletService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class WithdrawalController extends Controller
 {
@@ -33,7 +34,7 @@ class WithdrawalController extends Controller
 
         $details = $withdrawal->account_details;
         $payout  = $this->mvPayService->createPayout([
-            'order_id'     => $withdrawal->id,
+            'order_id'     => 'WD' . $withdrawal->id . 'T' . time(),
             'amount'       => $withdrawal->amount,
             'bank_account' => $details['account_number'] ?? $details['upi_id'] ?? '',
             'bank_ifsc'    => $details['ifsc'] ?? '',
@@ -41,10 +42,15 @@ class WithdrawalController extends Controller
             'remark'       => 'Withdrawal #' . $withdrawal->id,
         ]);
 
-        if (($payout['status'] ?? '') !== 'success' && ($payout['code'] ?? '') !== '200') {
+        Log::info('Payout response for withdrawal #' . $withdrawal->id, $payout);
+
+        $success = isset($payout['code']) && (string)$payout['code'] === '200';
+        $success = $success || (isset($payout['status']) && strtolower($payout['status']) === 'success');
+
+        if (!$success) {
             return response()->json([
-                'message'  => 'Gateway payout failed: ' . ($payout['message'] ?? 'Unknown error'),
-                'gateway'  => $payout,
+                'message' => 'Gateway payout failed: ' . ($payout['message'] ?? $payout['msg'] ?? json_encode($payout)),
+                'gateway' => $payout,
             ], 422);
         }
 

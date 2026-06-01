@@ -29,11 +29,8 @@ class MvPayService
             $filtered[$k] = $v;
         }
         ksort($filtered);
-        $str = '';
-        foreach ($filtered as $k => $v) {
-            $str .= $k . '=' . $v . '&';
-        }
-        $str .= 'key=' . $this->secretKey;
+        $str = urldecode(http_build_query($filtered));
+        $str .= '&key=' . $this->secretKey;
         return strtolower(md5($str));
     }
 
