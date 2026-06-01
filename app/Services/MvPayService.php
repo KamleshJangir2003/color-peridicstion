@@ -40,14 +40,8 @@ class MvPayService
     }
 
     // POST /Transfer/index - Create Payment (Deposit)
-    // Sign fields: merchant_id, no, amount ONLY
     public function createPayment(array $data): array
     {
-        $signParams = [
-            'merchant_id' => $this->merchantId,
-            'no'          => (string) $data['order_id'],
-            'amount'      => (string) (int) $data['amount'],
-        ];
         $params = [
             'merchant_id' => $this->merchantId,
             'no'          => (string) $data['order_id'],
@@ -56,7 +50,7 @@ class MvPayService
             'return_url'  => $data['return_url'] ?? url('/deposit'),
             'remark'      => $data['remark'] ?? 'Deposit',
         ];
-        $params['sign'] = $this->generateSign($signParams);
+        $params['sign'] = $this->generateSign($params);
 
         return $this->post('/Transfer/index', $params);
     }
@@ -74,14 +68,8 @@ class MvPayService
     }
 
     // POST /Transfer/replay - Create Payout (Withdrawal)
-    // Sign fields: merchant_id, no, amount ONLY
     public function createPayout(array $data): array
     {
-        $signParams = [
-            'merchant_id' => $this->merchantId,
-            'no'          => (string) $data['order_id'],
-            'amount'      => (string) (int) $data['amount'],
-        ];
         $params = [
             'merchant_id' => $this->merchantId,
             'no'          => (string) $data['order_id'],
@@ -93,7 +81,7 @@ class MvPayService
             'remark'      => $data['remark'] ?? 'Withdrawal',
         ];
 
-        $params['sign'] = $this->generateSign($signParams);
+        $params['sign'] = $this->generateSign($params);
 
         return $this->post('/Transfer/replay', $params);
     }
