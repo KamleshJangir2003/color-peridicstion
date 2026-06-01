@@ -42,17 +42,24 @@ class MvPayService
     // POST /Transfer/index - Create Payment (Deposit)
     public function createPayment(array $data): array
     {
-        $params = [
+        $no     = (string) $data['order_id'];
+        $amount = (string) (int) $data['amount'];
+
+        $sign = $this->generateSign([
             'merchant_id' => $this->merchantId,
-            'no'          => (string) $data['order_id'],
-            'amount'      => (string) (int) $data['amount'],
+            'no'          => $no,
+            'amount'      => $amount,
+        ]);
+
+        return $this->post('/Transfer/index', [
+            'merchant_id' => $this->merchantId,
+            'no'          => $no,
+            'amount'      => $amount,
             'notify_url'  => url('/api/payment/callback'),
             'return_url'  => $data['return_url'] ?? url('/deposit'),
             'remark'      => $data['remark'] ?? 'Deposit',
-        ];
-        $params['sign'] = $this->generateSign($params);
-
-        return $this->post('/Transfer/index', $params);
+            'sign'        => $sign,
+        ]);
     }
 
     // POST /Transfer/getorderstatus - Query Payment Status
@@ -70,20 +77,26 @@ class MvPayService
     // POST /Transfer/replay - Create Payout (Withdrawal)
     public function createPayout(array $data): array
     {
-        $params = [
+        $no     = (string) $data['order_id'];
+        $amount = (string) (int) $data['amount'];
+
+        $sign = $this->generateSign([
             'merchant_id' => $this->merchantId,
-            'no'          => (string) $data['order_id'],
-            'amount'      => (string) (int) $data['amount'],
+            'no'          => $no,
+            'amount'      => $amount,
+        ]);
+
+        return $this->post('/Transfer/replay', [
+            'merchant_id' => $this->merchantId,
+            'no'          => $no,
+            'amount'      => $amount,
             'account'     => $data['bank_account'],
             'name'        => $data['account_name'],
             'ifsc_code'   => $data['bank_ifsc'],
             'notify_url'  => url('/api/payout/callback'),
             'remark'      => $data['remark'] ?? 'Withdrawal',
-        ];
-
-        $params['sign'] = $this->generateSign($params);
-
-        return $this->post('/Transfer/replay', $params);
+            'sign'        => $sign,
+        ]);
     }
 
     // POST /Transfer/repayorderstatus - Query Payout Status
