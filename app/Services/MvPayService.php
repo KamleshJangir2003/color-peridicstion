@@ -81,7 +81,7 @@ class MvPayService
         ];
         $params = array_merge($signParams, [
             'account'    => $data['bank_account'],
-            'ifsc'       => $data['bank_ifsc'] ?? '',
+            'ifsc_code'  => $data['bank_ifsc'] ?? '',
             'name'       => $data['account_name'],
             'notify_url' => url('/api/payout/callback'),
             'remark'     => $data['remark'] ?? 'Withdrawal',
