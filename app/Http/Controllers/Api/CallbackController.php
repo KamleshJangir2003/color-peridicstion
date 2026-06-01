@@ -91,7 +91,7 @@ class CallbackController extends Controller
             return response('FAIL', 403);
         }
 
-        $withdrawal = Withdrawal::find($orderId);
+        $withdrawal = Withdrawal::where('id', $orderId)->first();
 
         if (!$withdrawal) {
             return response('FAIL', 404);
