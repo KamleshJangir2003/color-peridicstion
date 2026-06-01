@@ -41,7 +41,7 @@ class WithdrawalController extends Controller
             'bank_account' => $method === 'upi'
                                 ? ($details['upi_id'] ?? '')
                                 : ($details['account_number'] ?? ''),
-            'bank_ifsc'    => $method === 'bank' ? ($details['ifsc'] ?? '') : '',
+            'bank_ifsc'    => $method === 'bank' ? ($details['ifsc'] ?? null) : null,
             'account_name' => $details['name'] ?? $withdrawal->user->name,
             'remark'       => 'Withdrawal #' . $withdrawal->id,
         ]);
