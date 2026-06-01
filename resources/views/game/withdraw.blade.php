@@ -26,7 +26,7 @@
 <div class="bal-card">
     <div style="font-size:12px;color:#94A3B8;margin-bottom:4px;">Winning Balance (Withdrawable)</div>
     <div style="font-size:34px;font-weight:900;color:#22C55E;" id="winBal">₹0.00</div>
-    <div style="font-size:11px;color:#94A3B8;margin-top:4px;">Min ₹100 | Daily limit ₹10,000</div>
+    <div style="font-size:11px;color:#94A3B8;margin-top:4px;">Min ₹{{ App\Models\Setting::get('withdrawal_min', 5) }} | Daily limit ₹{{ App\Models\Setting::get('withdrawal_daily_limit', 10000) }}</div>
 </div>
 
 <div class="card">
@@ -97,7 +97,7 @@
 
     <!-- STEP 2: AMOUNT -->
     <div style="font-size:12px;color:#94A3B8;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Step 2 — Enter Amount</div>
-    <input type="number" id="wdAmt" class="form-control" placeholder="Enter amount (Min ₹100)" min="100" style="margin-bottom:8px;">
+    <input type="number" id="wdAmt" class="form-control" placeholder="Enter amount (Min ₹{{ App\Models\Setting::get('withdrawal_min', 5) }})" min="{{ App\Models\Setting::get('withdrawal_min', 5) }}" style="margin-bottom:8px;">
     <div class="chip-row" id="chipRow">
         <span class="chip" onclick="setAmt(100,this)">₹100</span>
         <span class="chip" onclick="setAmt(500,this)">₹500</span>
@@ -236,7 +236,8 @@ async function doWithdraw() {
     const amt = parseFloat(document.getElementById('wdAmt').value);
     const otp = document.getElementById('wdOtp').value.trim();
 
-    if (!amt || amt < 100)        { showToast('Minimum ₹100', 'error'); return; }
+    const minWd = {{ App\Models\Setting::get('withdrawal_min', 5) }};
+    if (!amt || amt < minWd)       { showToast('Minimum ₹' + minWd, 'error'); return; }
     if (otp.length !== 6)          { showToast('Enter 6-digit OTP', 'error'); return; }
 
     const acc = getAcc();
