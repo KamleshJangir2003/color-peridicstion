@@ -70,6 +70,7 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::get('/game/rounds',                  [Admin\GameController::class, 'rounds']);
     Route::post('/game/rounds/{round}/result',  [Admin\GameController::class, 'setResult']);
     Route::post('/game/result-type',            [Admin\GameController::class, 'setResultType']);
+    Route::get('/game/live-bets',               [Admin\GameController::class, 'liveBets']);
 
     // Settings
     Route::get('/settings',          [Admin\UserController::class, 'getSettings']);

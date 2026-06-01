@@ -211,6 +211,9 @@
         <a href="/admin/game" class="nav-item {{ request()->is('admin/game') ? 'active' : '' }}">
             <i class="fas fa-gamepad"></i> Game Control
         </a>
+        <a href="/admin/live-bets" class="nav-item {{ request()->is('admin/live-bets') ? 'active' : '' }}">
+            <i class="fas fa-fire"></i> Live Bets
+        </a>
         <div class="nav-section">System</div>
         <a href="/admin/settings" class="nav-item {{ request()->is('admin/settings') ? 'active' : '' }}">
             <i class="fas fa-gear"></i> Settings

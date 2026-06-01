@@ -32,5 +32,6 @@ Route::prefix('admin')->name('admin.')->middleware('web.auth')->group(function (
     Route::get('/deposits',    [AdminWebController::class, 'deposits'])->name('deposits');
     Route::get('/withdrawals', [AdminWebController::class, 'withdrawals'])->name('withdrawals');
     Route::get('/game',        [AdminWebController::class, 'game'])->name('game');
+    Route::get('/live-bets',   [AdminWebController::class, 'liveBets'])->name('live-bets');
     Route::get('/settings',    [AdminWebController::class, 'settings'])->name('settings');
 });

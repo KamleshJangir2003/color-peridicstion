@@ -29,8 +29,11 @@ class MvPayService
             $filtered[$k] = $v;
         }
         ksort($filtered);
-        $str = urldecode(http_build_query($filtered));
-        $str .= '&key=' . $this->secretKey;
+        $str = '';
+        foreach ($filtered as $k => $v) {
+            $str .= $k . '=' . $v . '&';
+        }
+        $str .= 'key=' . $this->secretKey;
         return strtolower(md5($str));
     }
 
@@ -40,6 +43,7 @@ class MvPayService
     }
 
     // POST /Transfer/index - Create Payment (Deposit)
+    // Sign fields: merchant_id + no + amount only
     public function createPayment(array $data): array
     {
         $no     = (string) $data['order_id'];
@@ -75,24 +79,31 @@ class MvPayService
     }
 
     // POST /Transfer/replay - Create Payout (Withdrawal)
+    // Sign fields: merchant_id + no + amount + account + name + ifsc_code only
     public function createPayout(array $data): array
     {
-        $no     = (string) $data['order_id'];
-        $amount = (string) (int) $data['amount'];
+        $no      = (string) $data['order_id'];
+        $amount  = (string) (int) $data['amount'];
+        $account = $data['bank_account'];
+        $name    = $data['account_name'];
+        $ifsc    = $data['bank_ifsc'];
 
         $sign = $this->generateSign([
             'merchant_id' => $this->merchantId,
             'no'          => $no,
             'amount'      => $amount,
+            'account'     => $account,
+            'name'        => $name,
+            'ifsc_code'   => $ifsc,
         ]);
 
         return $this->post('/Transfer/replay', [
             'merchant_id' => $this->merchantId,
             'no'          => $no,
             'amount'      => $amount,
-            'account'     => $data['bank_account'],
-            'name'        => $data['account_name'],
-            'ifsc_code'   => $data['bank_ifsc'],
+            'account'     => $account,
+            'name'        => $name,
+            'ifsc_code'   => $ifsc,
             'notify_url'  => url('/api/payout/callback'),
             'remark'      => $data['remark'] ?? 'Withdrawal',
             'sign'        => $sign,

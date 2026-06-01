@@ -46,4 +46,42 @@ class GameController extends Controller
             GameRound::with('result')->latest()->paginate(20)
         );
     }
+
+    public function liveBets()
+    {
+        $round = GameRound::where('status', 'open')->latest()->first();
+
+        if (!$round) {
+            return response()->json(['round' => null, 'bets' => [], 'summary' => [], 'total_amount' => 0]);
+        }
+
+        // Individual bets with user name & phone
+        $bets = $round->bets()
+            ->with('user:id,name,phone')
+            ->orderByDesc('amount')
+            ->get()
+            ->map(fn($b) => [
+                'user'      => $b->user->name ?? 'Unknown',
+                'phone'     => $b->user->phone ?? '—',
+                'bet_value' => $b->bet_value,
+                'bet_type'  => $b->bet_type,
+                'amount'    => $b->amount,
+                'placed_at' => $b->created_at->format('H:i:s'),
+            ]);
+
+        // Summary grouped by bet_value
+        $summary = $round->bets()
+            ->selectRaw('bet_value, COUNT(*) as bet_count, SUM(amount) as total_amount')
+            ->groupBy('bet_value')
+            ->orderByDesc('total_amount')
+            ->get();
+
+        return response()->json([
+            'round'        => $round->round_id,
+            'ends_at'      => $round->ends_at,
+            'bets'         => $bets,
+            'summary'      => $summary,
+            'total_amount' => $round->bets()->sum('amount'),
+        ]);
+    }
 }

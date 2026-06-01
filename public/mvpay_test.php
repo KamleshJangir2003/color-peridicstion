@@ -5,9 +5,19 @@ $secretKey  = '9e66e751433ef9dec6096a4dfaaddbc7';
 $baseUrl    = 'https://www.mv-pay.org';
 
 function generateSign(array $params, string $secretKey): string {
-    ksort($params);
-    $str = urldecode(http_build_query($params));
-    $str .= '&key=' . $secretKey;
+    $filtered = [];
+    foreach ($params as $k => $v) {
+        if ($k === 'sign') continue;
+        $v = trim((string) $v);
+        if ($v === '') continue;
+        $filtered[$k] = $v;
+    }
+    ksort($filtered);
+    $str = '';
+    foreach ($filtered as $k => $v) {
+        $str .= $k . '=' . $v . '&';
+    }
+    $str .= 'key=' . $secretKey;
     return strtolower(md5($str));
 }
 
@@ -25,14 +35,14 @@ function mvpayPost(string $url, array $params): string {
 
 // Test Payout
 $params = [
-    'merchant_id'  => $merchantId,
-    'no'           => 'TEST' . time(),
-    'amount'       => '200',
-    'bank_account' => '7780101437677',
-    'bank_ifsc'    => 'FDRL0007778',
-    'account_name' => 'kamlesh kumar',
-    'notify_url'   => 'https://nighty1games.shop/api/payout/callback',
-    'remark'       => 'test',
+    'merchant_id' => $merchantId,
+    'no'          => 'TEST' . time(),
+    'amount'      => '200',
+    'account'     => '7780101437677',
+    'name'        => 'kamlesh kumar',
+    'ifsc_code'   => 'FDRL0007778',
+    'notify_url'  => 'https://nighty1games.shop/api/payout/callback',
+    'remark'      => 'test',
 ];
 $params['sign'] = generateSign($params, $secretKey);
 
