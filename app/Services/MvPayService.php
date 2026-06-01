@@ -88,13 +88,10 @@ class MvPayService
             'amount'      => (string) (int) $data['amount'],
             'account'     => $data['bank_account'],
             'name'        => $data['account_name'],
+            'ifsc_code'   => $data['bank_ifsc'],
             'notify_url'  => url('/api/payout/callback'),
             'remark'      => $data['remark'] ?? 'Withdrawal',
         ];
-
-        if (!empty($data['bank_ifsc'])) {
-            $params['ifsc_code'] = $data['bank_ifsc'];
-        }
 
         $params['sign'] = $this->generateSign($signParams);
 
