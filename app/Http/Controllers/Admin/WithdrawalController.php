@@ -33,11 +33,15 @@ class WithdrawalController extends Controller
         }
 
         $details = $withdrawal->account_details;
-        $payout  = $this->mvPayService->createPayout([
+        $method  = $withdrawal->method;
+
+        $payout = $this->mvPayService->createPayout([
             'order_id'     => (string) $withdrawal->id,
             'amount'       => $withdrawal->amount,
-            'bank_account' => $details['account_number'] ?? $details['upi_id'] ?? '',
-            'bank_ifsc'    => $details['ifsc'] ?? '',
+            'bank_account' => $method === 'upi'
+                                ? ($details['upi_id'] ?? '')
+                                : ($details['account_number'] ?? ''),
+            'bank_ifsc'    => $method === 'bank' ? ($details['ifsc'] ?? '') : '',
             'account_name' => $details['name'] ?? $withdrawal->user->name,
             'remark'       => 'Withdrawal #' . $withdrawal->id,
         ]);

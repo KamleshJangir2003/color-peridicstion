@@ -81,11 +81,16 @@ class MvPayService
         ];
         $params = array_merge($signParams, [
             'account'    => $data['bank_account'],
-            'ifsc_code'  => $data['bank_ifsc'] ?? '',
             'name'       => $data['account_name'],
             'notify_url' => url('/api/payout/callback'),
             'remark'     => $data['remark'] ?? 'Withdrawal',
         ]);
+
+        // Only send ifsc_code for bank transfers, not UPI
+        if (!empty($data['bank_ifsc'])) {
+            $params['ifsc_code'] = $data['bank_ifsc'];
+        }
+
         $params['sign'] = $this->generateSign($signParams);
 
         return $this->post('/Transfer/replay', $params);
