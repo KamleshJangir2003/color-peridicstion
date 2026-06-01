@@ -5,16 +5,15 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use App\Models\Withdrawal;
-use App\Services\MvPayService;
 use App\Services\OtpService;
 use App\Services\WalletService;
 use Illuminate\Http\Request;
+
 class WithdrawalController extends Controller
 {
     public function __construct(
         private WalletService $walletService,
-        private OtpService $otpService,
-        private MvPayService $mvPayService
+        private OtpService $otpService
     ) {}
 
     public function store(Request $request)
@@ -62,17 +61,7 @@ class WithdrawalController extends Controller
             'account_details' => $request->account_details,
         ]);
 
-        $details = $request->account_details;
-        $payout  = $this->mvPayService->createPayout([
-            'order_id'     => $withdrawal->id,
-            'amount'       => $withdrawal->amount,
-            'bank_account' => $details['account_number'] ?? $details['upi_id'] ?? '',
-            'bank_ifsc'    => $details['ifsc'] ?? '',
-            'account_name' => $details['name'] ?? $user->name,
-            'remark'       => 'Withdrawal #' . $withdrawal->id,
-        ]);
-
-        return response()->json(['withdrawal' => $withdrawal, 'mvpay' => $payout], 201);
+        return response()->json(['withdrawal' => $withdrawal], 201);
     }
 
     public function index(Request $request)

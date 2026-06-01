@@ -4,12 +4,16 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Withdrawal;
+use App\Services\MvPayService;
 use App\Services\WalletService;
 use Illuminate\Http\Request;
 
 class WithdrawalController extends Controller
 {
-    public function __construct(private WalletService $walletService) {}
+    public function __construct(
+        private WalletService $walletService,
+        private MvPayService $mvPayService
+    ) {}
 
     public function index(Request $request)
     {
@@ -27,14 +31,32 @@ class WithdrawalController extends Controller
             return response()->json(['message' => 'Already processed'], 422);
         }
 
-        $withdrawal->update([
-            'status'      => 'approved',
-            'approved_by' => $request->user()->id,
-            'approved_at' => now(),
-            'admin_note'  => $request->note,
+        $details = $withdrawal->account_details;
+        $payout  = $this->mvPayService->createPayout([
+            'order_id'     => $withdrawal->id,
+            'amount'       => $withdrawal->amount,
+            'bank_account' => $details['account_number'] ?? $details['upi_id'] ?? '',
+            'bank_ifsc'    => $details['ifsc'] ?? '',
+            'account_name' => $details['name'] ?? $withdrawal->user->name,
+            'remark'       => 'Withdrawal #' . $withdrawal->id,
         ]);
 
-        return response()->json(['message' => 'Withdrawal approved']);
+        if (($payout['status'] ?? '') !== 'success' && ($payout['code'] ?? '') !== '200') {
+            return response()->json([
+                'message'  => 'Gateway payout failed: ' . ($payout['message'] ?? 'Unknown error'),
+                'gateway'  => $payout,
+            ], 422);
+        }
+
+        $withdrawal->update([
+            'status'         => 'approved',
+            'approved_by'    => $request->user()->id,
+            'approved_at'    => now(),
+            'admin_note'     => $request->note,
+            'transaction_id' => $payout['data']['order_no'] ?? $payout['order_no'] ?? null,
+        ]);
+
+        return response()->json(['message' => 'Withdrawal approved and payout sent', 'gateway' => $payout]);
     }
 
     public function reject(Request $request, Withdrawal $withdrawal)
