@@ -18,12 +18,22 @@ class MvPayService
         $this->baseUrl    = config('services.mvpay.base_url');
     }
 
-    // Sign Rule: ASCII sort params, append &key=SECRET, MD5, lowercase
+    // Sign Rule: skip empty+sign, trim, ASCII sort, key=value& concat, append key=SECRET, MD5 lowercase
     public function generateSign(array $params): string
     {
-        ksort($params);
-        $str = urldecode(http_build_query($params));
-        $str .= '&key=' . $this->secretKey;
+        $filtered = [];
+        foreach ($params as $k => $v) {
+            if ($k === 'sign') continue;
+            $v = trim((string) $v);
+            if ($v === '') continue;
+            $filtered[$k] = $v;
+        }
+        ksort($filtered);
+        $str = '';
+        foreach ($filtered as $k => $v) {
+            $str .= $k . '=' . $v . '&';
+        }
+        $str .= 'key=' . $this->secretKey;
         return strtolower(md5($str));
     }
 
@@ -35,17 +45,20 @@ class MvPayService
     }
 
     // POST /Transfer/index - Create Payment (Deposit)
+    // Sign fields: merchant_id, no, amount ONLY
     public function createPayment(array $data): array
     {
-        $params = [
+        $signParams = [
             'merchant_id' => $this->merchantId,
             'no'          => (string) $data['order_id'],
-            'amount'      => (string) $data['amount'],
-            'notify_url'  => url('/api/payment/callback'),
-            'return_url'  => $data['return_url'] ?? url('/'),
-            'remark'      => $data['remark'] ?? 'Deposit',
+            'amount'      => (string) (int) $data['amount'],
         ];
-        $params['sign'] = $this->generateSign($params);
+        $params = array_merge($signParams, [
+            'notify_url' => url('/api/payment/callback'),
+            'return_url' => $data['return_url'] ?? url('/deposit'),
+            'remark'     => $data['remark'] ?? 'Deposit',
+        ]);
+        $params['sign'] = $this->generateSign($signParams);
 
         return $this->post('/Transfer/index', $params);
     }
@@ -63,19 +76,22 @@ class MvPayService
     }
 
     // POST /Transfer/replay - Create Payout (Withdrawal)
+    // Sign fields: merchant_id, no, amount ONLY
     public function createPayout(array $data): array
     {
-        $params = [
-            'merchant_id'  => $this->merchantId,
-            'no'           => (string) $data['order_id'],
-            'amount'       => (string) $data['amount'],
-            'bank_account' => $data['bank_account'],
-            'bank_ifsc'    => $data['bank_ifsc'] ?? '',
-            'account_name' => $data['account_name'],
-            'notify_url'   => url('/api/payout/callback'),
-            'remark'       => $data['remark'] ?? 'Withdrawal',
+        $signParams = [
+            'merchant_id' => $this->merchantId,
+            'no'          => (string) $data['order_id'],
+            'amount'      => (string) (int) $data['amount'],
         ];
-        $params['sign'] = $this->generateSign($params);
+        $params = array_merge($signParams, [
+            'account'    => $data['bank_account'],
+            'ifsc'       => $data['bank_ifsc'] ?? '',
+            'name'       => $data['account_name'],
+            'notify_url' => url('/api/payout/callback'),
+            'remark'     => $data['remark'] ?? 'Withdrawal',
+        ]);
+        $params['sign'] = $this->generateSign($signParams);
 
         return $this->post('/Transfer/replay', $params);
     }
@@ -120,6 +136,7 @@ class MvPayService
     {
         try {
             $response = Http::timeout(30)
+                ->asForm()
                 ->post($this->baseUrl . $endpoint, $params);
 
             Log::info('MvPay Request', ['endpoint' => $endpoint, 'params' => $params]);

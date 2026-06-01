@@ -34,7 +34,7 @@ class DepositController extends Controller
 
         return response()->json([
             'deposit'     => $deposit,
-            'payment_url' => $response['pay_url'] ?? $response['url'] ?? null,
+            'payment_url' => $response['data']['pay_url'] ?? $response['data']['pay_link'] ?? null,
             'mvpay'       => $response,
         ], 201);
     }
