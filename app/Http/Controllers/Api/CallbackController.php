@@ -22,26 +22,34 @@ class CallbackController extends Controller
     {
         Log::info('Payment Callback', $request->all());
 
-        if (!$this->mvPayService->verifySign($request->all())) {
-            Log::warning('Payment Callback: Invalid signature', $request->all());
-            return response()->json(['message' => 'Invalid signature'], 403);
-        }
-
         $orderId       = $request->input('no') ?? $request->input('order_id');
         $status        = $request->input('status');
-        $transactionId = $request->input('transaction_id');
-            ->orWhere('transaction_id', $orderId)
-            ->first();
+        $transactionId = $request->input('transaction_id') ?? $request->input('tx');
+        $amount        = $request->input('amount');
+
+        // Verify sign using only merchant_id, no, amount
+        $signParams = [
+            'merchant_id' => $request->input('merchant_id'),
+            'no'          => $orderId,
+            'amount'      => $amount,
+        ];
+        if (!$this->mvPayService->verifySign($signParams, $request->input('sign'))) {
+            Log::warning('Payment Callback: Invalid signature', $request->all());
+            return response('FAIL', 403);
+        }
+
+        $deposit = Deposit::where('id', $orderId)->first();
 
         if (!$deposit) {
-            return response()->json(['message' => 'Order not found'], 404);
+            Log::warning('Payment Callback: Order not found', ['order_id' => $orderId]);
+            return response('FAIL', 404);
         }
 
         if ($deposit->status !== 'pending') {
-            return response()->json(['message' => 'Already processed'], 200);
+            return response('SUCCESS', 200);
         }
 
-        if ($status === 'success') {
+        if ($status === 'success' || $status === '1') {
             $deposit->update([
                 'status'         => 'approved',
                 'transaction_id' => $transactionId ?? $deposit->transaction_id,
@@ -53,11 +61,13 @@ class CallbackController extends Controller
                 'Deposit via MvPay',
                 $transactionId
             );
+            Log::info('Payment Callback: Deposit approved', ['deposit_id' => $deposit->id, 'amount' => $deposit->amount]);
         } else {
             $deposit->update(['status' => 'rejected']);
+            Log::info('Payment Callback: Deposit rejected', ['deposit_id' => $deposit->id]);
         }
 
-        return response()->json(['message' => 'OK'], 200);
+        return response('SUCCESS', 200);
     }
 
     // POST /api/payout/callback
@@ -65,27 +75,37 @@ class CallbackController extends Controller
     {
         Log::info('Payout Callback', $request->all());
 
-        if (!$this->mvPayService->verifySign($request->all())) {
-            Log::warning('Payout Callback: Invalid signature', $request->all());
-            return response()->json(['message' => 'Invalid signature'], 403);
-        }
-
         $orderId       = $request->input('no') ?? $request->input('order_id');
         $status        = $request->input('status');
-        $transactionId = $request->input('transaction_id');
+        $transactionId = $request->input('transaction_id') ?? $request->input('tx');
+        $amount        = $request->input('amount');
+
+        // Verify sign using only merchant_id, no, amount
+        $signParams = [
+            'merchant_id' => $request->input('merchant_id'),
+            'no'          => $orderId,
+            'amount'      => $amount,
+        ];
+        if (!$this->mvPayService->verifySign($signParams, $request->input('sign'))) {
+            Log::warning('Payout Callback: Invalid signature', $request->all());
+            return response('FAIL', 403);
+        }
 
         $withdrawal = Withdrawal::find($orderId);
 
         if (!$withdrawal) {
-            return response()->json(['message' => 'Order not found'], 404);
+            return response('FAIL', 404);
         }
 
         if ($withdrawal->status !== 'pending') {
-            return response()->json(['message' => 'Already processed'], 200);
+            return response('SUCCESS', 200);
         }
 
-        if ($status === 'success') {
-            $withdrawal->update(['status' => 'approved']);
+        if ($status === 'success' || $status === '1') {
+            $withdrawal->update([
+                'status'         => 'approved',
+                'transaction_id' => $transactionId ?? $withdrawal->transaction_id,
+            ]);
         } else {
             $withdrawal->update(['status' => 'rejected']);
             $this->walletService->credit(
@@ -97,6 +117,6 @@ class CallbackController extends Controller
             );
         }
 
-        return response()->json(['message' => 'OK'], 200);
+        return response('SUCCESS', 200);
     }
 }

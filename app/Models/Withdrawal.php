@@ -8,7 +8,7 @@ class Withdrawal extends Model
 {
     protected $fillable = [
         'user_id','amount','method','account_details',
-        'status','admin_note','approved_by','approved_at',
+        'transaction_id','status','admin_note','approved_by','approved_at',
     ];
 
     protected $casts = [

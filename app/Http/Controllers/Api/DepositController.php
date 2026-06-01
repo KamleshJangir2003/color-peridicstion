@@ -15,7 +15,7 @@ class DepositController extends Controller
     {
         $request->validate([
             'amount' => 'required|numeric|min:100',
-            'method' => 'required|in:upi,qr,bank',
+            'method' => 'required|in:upi,qr,tron_usdt',
         ]);
 
         $deposit = Deposit::create([

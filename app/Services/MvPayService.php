@@ -37,10 +37,8 @@ class MvPayService
         return strtolower(md5($str));
     }
 
-    public function verifySign(array $params): bool
+    public function verifySign(array $params, string $receivedSign = ''): bool
     {
-        $receivedSign = $params['sign'] ?? '';
-        unset($params['sign']);
         return $this->generateSign($params) === strtolower($receivedSign);
     }
 
