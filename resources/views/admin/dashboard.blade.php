@@ -84,7 +84,8 @@
 async function loadDashboard() {
     const data = await AAPI('/dashboard');
     document.getElementById('statUsers').textContent    = data.total_users || 0;
-    document.getElementById('statRevenue').textContent  = '₹' + parseFloat(data.total_revenue || 0).toFixed(0);
+    const totalRev = parseFloat(data.total_revenue || 0) + parseFloat(data.withdrawal_charges || 0);
+    document.getElementById('statRevenue').textContent  = '₹' + totalRev.toFixed(0);
     document.getElementById('statPendingDep').textContent = data.pending_deposits || 0;
     document.getElementById('statPendingWd').textContent  = data.pending_withdrawals || 0;
 }
@@ -137,26 +138,42 @@ async function loadRecentRounds() {
 }
 
 async function approveDeposit(id) {
-    await AAPI(`/deposits/${id}/approve`, { method:'POST', body:JSON.stringify({}) });
-    showToast('Deposit approved!', 'success');
-    loadRecentDeposits(); loadDashboard();
+    try {
+        const res = await AAPI(`/deposits/${id}/approve`, { method:'POST', body:JSON.stringify({}) });
+        if (res.message && !res.error) {
+            showToast(res.message, 'success');
+            loadRecentDeposits(); loadDashboard();
+        } else {
+            showToast(res.message || 'Failed to approve', 'error');
+        }
+    } catch(e) { showToast('Error approving deposit', 'error'); }
 }
 async function rejectDeposit(id) {
     if (!confirm('Reject this deposit?')) return;
-    await AAPI(`/deposits/${id}/reject`, { method:'POST', body:JSON.stringify({}) });
-    showToast('Deposit rejected', 'error');
-    loadRecentDeposits(); loadDashboard();
+    try {
+        const res = await AAPI(`/deposits/${id}/reject`, { method:'POST', body:JSON.stringify({}) });
+        showToast(res.message || 'Deposit rejected', res.error ? 'error' : 'success');
+        loadRecentDeposits(); loadDashboard();
+    } catch(e) { showToast('Error', 'error'); }
 }
 async function approveWd(id) {
-    await AAPI(`/withdrawals/${id}/approve`, { method:'POST', body:JSON.stringify({}) });
-    showToast('Withdrawal approved!', 'success');
-    loadRecentWithdrawals(); loadDashboard();
+    try {
+        const res = await AAPI(`/withdrawals/${id}/approve`, { method:'POST', body:JSON.stringify({}) });
+        if (res.message && !res.error) {
+            showToast(res.message, 'success');
+            loadRecentWithdrawals(); loadDashboard();
+        } else {
+            showToast(res.message || 'Failed to approve', 'error');
+        }
+    } catch(e) { showToast('Error approving withdrawal', 'error'); }
 }
 async function rejectWd(id) {
     if (!confirm('Reject this withdrawal?')) return;
-    await AAPI(`/withdrawals/${id}/reject`, { method:'POST', body:JSON.stringify({}) });
-    showToast('Withdrawal rejected', 'error');
-    loadRecentWithdrawals(); loadDashboard();
+    try {
+        const res = await AAPI(`/withdrawals/${id}/reject`, { method:'POST', body:JSON.stringify({}) });
+        showToast(res.message || 'Withdrawal rejected', res.error ? 'error' : 'success');
+        loadRecentWithdrawals(); loadDashboard();
+    } catch(e) { showToast('Error', 'error'); }
 }
 
 loadDashboard();

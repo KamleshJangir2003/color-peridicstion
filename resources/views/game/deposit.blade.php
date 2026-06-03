@@ -179,5 +179,6 @@ async function loadDepositHistory() {
 }
 
 loadDepositHistory();
+setInterval(loadDepositHistory, 15000);
 </script>
 @endpush

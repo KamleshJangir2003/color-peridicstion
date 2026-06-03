@@ -147,5 +147,6 @@ async function loadTransactions(page = 1) {
 
 loadWallet();
 loadTransactions();
+setInterval(() => { loadWallet(); loadTransactions(); }, 15000);
 </script>
 @endpush

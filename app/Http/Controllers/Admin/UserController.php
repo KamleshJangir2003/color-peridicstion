@@ -17,11 +17,12 @@ class UserController extends Controller
     public function dashboard()
     {
         return response()->json([
-            'total_users'   => User::where('is_admin', false)->count(),
-            'total_revenue' => GameBet::sum('amount') - \App\Models\GameResult::sum('total_payout'),
-            'pending_deposits'   => Deposit::where('status', 'pending')->count(),
-            'pending_withdrawals'=> Withdrawal::where('status', 'pending')->count(),
-            'active_bets'   => GameBet::where('status', 'pending')->count(),
+            'total_users'         => User::where('is_admin', false)->count(),
+            'total_revenue'       => GameBet::sum('amount') - \App\Models\GameResult::sum('total_payout'),
+            'withdrawal_charges'  => Withdrawal::where('status', 'approved')->sum('charge'),
+            'pending_deposits'    => Deposit::where('status', 'pending')->count(),
+            'pending_withdrawals' => Withdrawal::where('status', 'pending')->count(),
+            'active_bets'         => GameBet::where('status', 'pending')->count(),
         ]);
     }
 

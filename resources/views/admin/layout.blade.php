@@ -273,17 +273,20 @@ if (adminUser.name) {
     document.getElementById('adminAvatar').textContent = adminUser.name[0].toUpperCase();
 }
 
-const AAPI = (path, opts={}) => fetch('/api/admin' + path, {
-    headers: {'Authorization':'Bearer '+ADMIN_TOKEN,'Content-Type':'application/json','Accept':'application/json'},
-    ...opts
-}).then(r => {
+const AAPI = async (path, opts={}) => {
+    const r = await fetch('/api/admin' + path, {
+        headers: {'Authorization':'Bearer '+ADMIN_TOKEN,'Content-Type':'application/json','Accept':'application/json'},
+        ...opts
+    });
     if (r.status === 401 || r.status === 403) {
         localStorage.removeItem('admin_token');
         localStorage.removeItem('admin_user');
         window.location.href = '/admin/login';
     }
-    return r.json();
-});
+    const data = await r.json();
+    if (!r.ok) data.error = true;
+    return data;
+};
 
 function showToast(msg, type='success') {
     const t = document.createElement('div');

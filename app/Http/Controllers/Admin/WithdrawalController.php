@@ -87,9 +87,10 @@ class WithdrawalController extends Controller
             return response()->json(['message' => 'Already processed'], 422);
         }
 
-        // Refund amount back to wallet
+        // Refund original requested amount back to wallet
+        $refundAmount = $withdrawal->amount_requested ?: $withdrawal->amount;
         $this->walletService->credit(
-            $withdrawal->user_id, $withdrawal->amount, 'winning',
+            $withdrawal->user_id, $refundAmount, 'winning',
             'Withdrawal rejected - refund', "withdrawal_{$withdrawal->id}"
         );
 

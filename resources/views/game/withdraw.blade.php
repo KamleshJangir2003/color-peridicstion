@@ -29,6 +29,22 @@
     <div style="font-size:11px;color:#94A3B8;margin-top:4px;">Min ₹{{ App\Models\Setting::get('withdrawal_min', 5) }} | Daily limit ₹{{ App\Models\Setting::get('withdrawal_daily_limit', 10000) }}</div>
 </div>
 
+<!-- CHARGE PREVIEW -->
+<div id="chargeBox" style="display:none;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.4);border-radius:10px;padding:12px;margin-bottom:14px;font-size:12px;">
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        <span style="color:#94A3B8;">Withdrawal Amount</span>
+        <span style="font-weight:700;" id="cAmt">₹0</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+        <span style="color:#EF4444;">Service Charge (5%)</span>
+        <span style="color:#EF4444;font-weight:700;" id="cCharge">- ₹0</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;border-top:1px solid rgba(245,158,11,0.3);padding-top:6px;margin-top:4px;">
+        <span style="color:#22C55E;font-weight:700;">You will receive</span>
+        <span style="color:#22C55E;font-weight:800;font-size:14px;" id="cFinal">₹0</span>
+    </div>
+</div>
+
 <div class="card">
     <div style="font-size:15px;font-weight:700;margin-bottom:16px;">💸 Withdraw Money</div>
 
@@ -97,7 +113,7 @@
 
     <!-- STEP 2: AMOUNT -->
     <div style="font-size:12px;color:#94A3B8;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Step 2 — Enter Amount</div>
-    <input type="number" id="wdAmt" class="form-control" placeholder="Enter amount (Min ₹{{ App\Models\Setting::get('withdrawal_min', 5) }})" min="{{ App\Models\Setting::get('withdrawal_min', 5) }}" style="margin-bottom:8px;">
+    <input type="number" id="wdAmt" class="form-control" placeholder="Enter amount (Min ₹{{ App\Models\Setting::get('withdrawal_min', 5) }})" min="{{ App\Models\Setting::get('withdrawal_min', 5) }}" style="margin-bottom:8px;" oninput="updateChargePreview(this.value)">
     <div class="chip-row" id="chipRow">
         <span class="chip" onclick="setAmt(100,this)">₹100</span>
         <span class="chip" onclick="setAmt(500,this)">₹500</span>
@@ -174,6 +190,18 @@ function setAmt(a, el) {
     document.getElementById('wdAmt').value = a;
     document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
     el.classList.add('on');
+    updateChargePreview(a);
+}
+
+function updateChargePreview(amt) {
+    amt = parseFloat(amt) || 0;
+    if (amt <= 0) { document.getElementById('chargeBox').style.display = 'none'; return; }
+    const charge = Math.round(amt * 0.05 * 100) / 100;
+    const final  = Math.round((amt - charge) * 100) / 100;
+    document.getElementById('cAmt').textContent    = '₹' + amt.toFixed(2);
+    document.getElementById('cCharge').textContent = '- ₹' + charge.toFixed(2);
+    document.getElementById('cFinal').textContent  = '₹' + final.toFixed(2);
+    document.getElementById('chargeBox').style.display = 'block';
 }
 
 // OTP
@@ -258,6 +286,7 @@ async function doWithdraw() {
             showToast('✅ Withdrawal submitted! Processing via MvPay.', 'success');
             document.getElementById('wdAmt').value = '';
             document.getElementById('wdOtp').value = '';
+            document.getElementById('chargeBox').style.display = 'none';
             document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
             API('/wallet/balance').then(b=>{ document.getElementById('winBal').textContent='₹'+parseFloat(b.winning||0).toFixed(2); });
             loadHist();
@@ -290,6 +319,7 @@ async function loadHist() {
 }
 
 loadHist();
+setInterval(loadHist, 15000);
 </script>
 
 @endsection

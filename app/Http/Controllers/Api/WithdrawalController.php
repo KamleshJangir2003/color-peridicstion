@@ -52,16 +52,26 @@ class WithdrawalController extends Controller
             return response()->json(['message' => "Daily withdrawal limit ₹{$dailyLimit} exceeded"], 422);
         }
 
+        $charge           = round($request->amount * 0.05, 2);
+        $amountAfterFee   = round($request->amount - $charge, 2);
+
+        // Debit full amount (including charge) from wallet
         $this->walletService->debit($user->id, $request->amount, 'winning', 'Withdrawal request');
 
         $withdrawal = Withdrawal::create([
-            'user_id'         => $user->id,
-            'amount'          => $request->amount,
-            'method'          => $request->method,
-            'account_details' => $request->account_details,
+            'user_id'          => $user->id,
+            'amount_requested' => $request->amount,
+            'charge'           => $charge,
+            'amount'           => $amountAfterFee,
+            'method'           => $request->method,
+            'account_details'  => $request->account_details,
         ]);
 
-        return response()->json(['withdrawal' => $withdrawal], 201);
+        return response()->json([
+            'withdrawal'       => $withdrawal,
+            'charge'           => $charge,
+            'amount_after_fee' => $amountAfterFee,
+        ], 201);
     }
 
     public function index(Request $request)
