@@ -184,7 +184,6 @@ async function loadRounds() {
 loadCurrentRound();
 loadResultType();
 loadRounds();
-setInterval(loadCurrentRound, 5000);
-setInterval(loadRounds, 15000);
+setInterval(() => { loadCurrentRound(); loadRounds(); }, 3000);
 </script>
 @endpush
