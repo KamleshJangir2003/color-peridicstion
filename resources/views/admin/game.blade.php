@@ -126,7 +126,7 @@ function selectManualNum(num, el) {
 async function setManualResult() {
     if (selectedManualNum === null) { showToast('Select a number first', 'error'); return; }
     const data = await AAPI('/game/rounds');
-    const round = (data.data || []).find(r => r.status === 'closed' || r.status === 'open');
+    const round = (data.data || []).find(r => r.status === 'closed');
     if (!round) { showToast('No active round', 'error'); return; }
     const res = await AAPI(`/game/rounds/${round.id}/result`, {
         method: 'POST',

@@ -18,9 +18,8 @@ class GameController extends Controller
             'number' => 'required|integer|between:0,9',
         ]);
 
-        // Force close if still open
         if ($round->status === 'open') {
-            $this->gameEngine->closeRound($round);
+            return response()->json(['message' => 'Round is still open, wait for it to close'], 422);
         }
 
         if ($round->status === 'resulted') {

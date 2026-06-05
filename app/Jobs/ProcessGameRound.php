@@ -23,11 +23,15 @@ class ProcessGameRound implements ShouldQueue
 
         foreach ($expiredRounds as $round) {
             $gameEngine->closeRound($round);
-            $gameEngine->generateResult($round);
+            // If admin mode, skip auto-result — admin will set it manually
+            if ($round->result_type !== 'admin') {
+                $gameEngine->generateResult($round);
+            }
         }
 
-        // Create new round if none is open
-        if (!GameRound::where('status', 'open')->exists()) {
+        // Create new round only if no open or pending-admin-result round exists
+        $hasActive = GameRound::whereIn('status', ['open', 'closed'])->exists();
+        if (!$hasActive) {
             $gameEngine->createRound();
         }
     }

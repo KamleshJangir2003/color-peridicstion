@@ -27,7 +27,9 @@ class GameController extends Controller
 
             foreach ($expired as $round) {
                 $this->gameEngine->closeRound($round);
-                $this->gameEngine->generateResult($round);
+                if ($round->result_type !== 'admin') {
+                    $this->gameEngine->generateResult($round);
+                }
             }
         });
 
