@@ -143,17 +143,22 @@ async function setManualResult() {
     if (selectedManualNum === null) { showToast('Select a number first', 'error'); return; }
     const data = await AAPI('/game/rounds');
     const round = (data.data || []).find(r => r.status === 'closed');
-    if (!round) { showToast('No active round', 'error'); return; }
+    if (!round) { showToast('No closed round found. Wait for timer to end.', 'error'); return; }
     const res = await AAPI(`/game/rounds/${round.id}/result`, {
         method: 'POST',
         body: JSON.stringify({ number: selectedManualNum })
     });
     if (res.number !== undefined) {
-        showToast(`✅ Result: ${selectedManualNum} (${res.color})`, 'success');
+        showToast(`✅ Result Set: ${res.number} (${res.color})`, 'success');
+        // Reset selection
+        selectedManualNum = null;
+        document.querySelectorAll('[id^="mnum-"]').forEach(b => b.style.boxShadow = 'none');
+        document.getElementById('setResultBtn').disabled = true;
     } else {
         showToast(res.message || 'Failed', 'error');
     }
-    loadRounds(); loadCurrentRound();
+    await loadRounds();
+    await loadCurrentRound();
 }
 
 async function loadRounds() {
