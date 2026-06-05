@@ -73,6 +73,20 @@
 @push('scripts')
 <script>
 let selectedManualNum = null;
+let timerInterval = null;
+let roundEndsAt = null;
+
+function startLocalTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        if (!roundEndsAt) return;
+        const sec = Math.max(0, Math.round((new Date(roundEndsAt) - Date.now()) / 1000));
+        document.getElementById('crTimer').textContent = sec + 's';
+        if (sec <= 0) {
+            document.getElementById('crStatus').textContent = '🔴 Closed';
+        }
+    }, 1000);
+}
 
 async function loadCurrentRound() {
     try {
@@ -81,10 +95,12 @@ async function loadCurrentRound() {
         });
         const data = await res.json();
         if (data.round_id) {
+            roundEndsAt = data.ends_at;
             document.getElementById('crRoundId').textContent = data.round_id;
             document.getElementById('crStatus').textContent  = '🟢 Open';
-            document.getElementById('crTimer').textContent   = data.seconds_left + 's';
+            startLocalTimer();
         } else {
+            roundEndsAt = null;
             document.getElementById('crRoundId').textContent = 'No active round';
             document.getElementById('crStatus').textContent  = 'Waiting';
             document.getElementById('crTimer').textContent   = '--';
