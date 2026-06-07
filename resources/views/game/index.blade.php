@@ -190,13 +190,13 @@
     <button class="place-btn" id="placeBtn" onclick="placeBet()" disabled>🎯 Place Bet</button>
 </div>
 
-<!-- MY BETS -->
+<!-- ROUND HISTORY -->
 <div class="card" style="margin-top:14px;">
-    <div class="sec-title">My Bets Today</div>
+    <div class="sec-title">📋 Round History</div>
     <table class="htable">
-        <thead><tr><th>Round</th><th>Bet</th><th>Amount</th><th>Result</th></tr></thead>
+        <thead><tr><th>Round</th><th>Result</th><th>My Bet</th><th>Amount</th><th>Status</th></tr></thead>
         <tbody id="myBetsBody">
-            <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px;">No bets yet</td></tr>
+            <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">Loading...</td></tr>
         </tbody>
     </table>
 </div>
@@ -292,13 +292,7 @@ function startTimer(secs) {
             clearInterval(timerInterval);
             document.getElementById('roundStatusTxt').innerHTML = '<span style="color:var(--gold);">⏳ Processing...</span>';
             disableBetting();
-            // Wait 3 sec then load new round
-            setTimeout(async () => {
-                await loadRound();
-                await loadHistory();
-                await loadMyBets();
-                await loadWallet();
-            }, 3000);
+            waitForResult(currentRound?.id);
             return;
         }
         rem--;
@@ -399,26 +393,79 @@ async function loadHistory() {
     }).join('');
 }
 
-// ── MY BETS ───────────────────────────────────────────────────
+// ── ROUND HISTORY + MY BETS (combined) ───────────────────────
 async function loadMyBets() {
-    const d = await API('/game/my-bets');
-    const bets = d.data || [];
-    const icons = {green:'🟢', red:'🔴', violet:'🟣'};
-    document.getElementById('myBetsBody').innerHTML = bets.length
-        ? bets.slice(0,10).map(b => {
-            const label = b.bet_type === 'color'
-                ? (icons[b.bet_value]||'') + ' ' + b.bet_value
-                : '#' + b.bet_value;
-            const sc = b.status==='won' ? 'badge-green' : b.status==='lost' ? 'badge-red' : 'badge-muted';
-            const sv = b.status==='won' ? '+₹'+b.win_amount : b.status==='lost' ? '-₹'+b.amount : '⏳';
+    const [histData, betsData] = await Promise.all([
+        API('/game/history'),
+        API('/game/my-bets')
+    ]);
+    const results  = histData.data || [];
+    const myBets   = betsData.data || [];
+    const icons    = {green:'🟢', red:'🔴', violet:'🟣'};
+    const colorHex = {green:'#22C55E', red:'#EF4444', violet:'#A855F7'};
+
+    // map my bets by round_id
+    const betMap = {};
+    myBets.forEach(b => { betMap[b.round_id] = b; });
+
+    document.getElementById('myBetsBody').innerHTML = results.length
+        ? results.slice(0,20).map(r => {
+            const dot = `<span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:${colorHex[r.color]||'#7C3AED'};color:#fff;font-weight:800;font-size:12px;">${r.number}</span>`;
+            const myBet = betMap[r.round_id];
+            let betLabel   = '<span style="color:var(--muted);font-size:11px;">No bet</span>';
+            let amtLabel   = '--';
+            let statusLabel = '--';
+            if (myBet) {
+                betLabel = myBet.bet_type === 'color'
+                    ? (icons[myBet.bet_value]||'') + ' ' + myBet.bet_value
+                    : '#' + myBet.bet_value;
+                amtLabel = '₹' + myBet.amount;
+                if (myBet.status === 'won')
+                    statusLabel = `<span style="color:#22C55E;font-weight:700;">+₹${myBet.win_amount} 🎉</span>`;
+                else if (myBet.status === 'lost')
+                    statusLabel = `<span style="color:#EF4444;font-weight:700;">❌ Lost</span>`;
+                else
+                    statusLabel = `<span style="color:var(--gold);">⏳</span>`;
+            }
             return `<tr>
-                <td style="font-size:11px;color:var(--muted);">${(b.round?.round_id||'--').slice(-4)}</td>
-                <td>${label}</td>
-                <td>₹${b.amount}</td>
-                <td><span class="badge ${sc}">${sv}</span></td>
+                <td style="font-size:11px;color:var(--muted);font-family:monospace;">${String(r.round?.round_id||r.round_id||'--').slice(-4)}</td>
+                <td>${dot}</td>
+                <td>${betLabel}</td>
+                <td style="font-size:12px;">${amtLabel}</td>
+                <td>${statusLabel}</td>
             </tr>`;
         }).join('')
-        : '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:20px;">No bets yet</td></tr>';
+        : '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">No rounds yet</td></tr>';
+}
+
+// ── WAIT FOR RESULT (poll until admin sets result) ───────────
+async function waitForResult(roundId) {
+    let attempts = 0;
+    const poll = setInterval(async () => {
+        attempts++;
+        try {
+            // Check history for result
+            const hist = await API('/game/history');
+            const histRound = (hist.data || []).find(r => r.round_id == roundId);
+            if (histRound) {
+                clearInterval(poll);
+                await loadHistory();
+                await loadMyBets();
+                await loadWallet();
+                await loadRound();
+                // Check if user won/lost
+                const bets = await API('/game/my-bets');
+                const myBet = (bets.data || []).find(b => b.round_id == roundId);
+                const winAmt = myBet?.status === 'won' ? parseFloat(myBet.win_amount || 0) : 0;
+                showResult(histRound.number, histRound.color, winAmt);
+                return;
+            }
+        } catch(e) {}
+        if (attempts >= 30) { // 60s max wait
+            clearInterval(poll);
+            await loadRound();
+        }
+    }, 2000);
 }
 
 // ── RESULT POPUP ──────────────────────────────────────────────

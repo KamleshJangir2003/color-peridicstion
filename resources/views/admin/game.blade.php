@@ -75,6 +75,8 @@
 let selectedManualNum = null;
 let timerInterval = null;
 let roundEndsAt = null;
+let currentRoundDbId = null;
+let lastClosedRoundDbId = null;
 
 function startLocalTimer() {
     if (timerInterval) clearInterval(timerInterval);
@@ -95,7 +97,12 @@ async function loadCurrentRound() {
         });
         const data = await res.json();
         if (data.round_id) {
+            // New open round — save previous as last closed
+            if (currentRoundDbId && currentRoundDbId !== data.id) {
+                lastClosedRoundDbId = currentRoundDbId;
+            }
             roundEndsAt = data.ends_at;
+            currentRoundDbId = data.id;
             document.getElementById('crRoundId').textContent = data.round_id;
             document.getElementById('crStatus').textContent  = '🟢 Open';
             startLocalTimer();
@@ -141,16 +148,23 @@ function selectManualNum(num, el) {
 
 async function setManualResult() {
     if (selectedManualNum === null) { showToast('Select a number first', 'error'); return; }
-    const data = await AAPI('/game/rounds');
-    const round = (data.data || []).find(r => r.status === 'closed');
-    if (!round) { showToast('No closed round found. Wait for timer to end.', 'error'); return; }
-    const res = await AAPI(`/game/rounds/${round.id}/result`, {
+
+    // Use last closed round id, fallback to API
+    let roundId = lastClosedRoundDbId;
+    if (!roundId) {
+        const data = await AAPI('/game/rounds');
+        const closed = (data.data || []).find(r => r.status === 'closed');
+        if (!closed) { showToast('No closed round found. Wait for timer to end.', 'error'); return; }
+        roundId = closed.id;
+    }
+
+    const res = await AAPI(`/game/rounds/${roundId}/result`, {
         method: 'POST',
         body: JSON.stringify({ number: selectedManualNum })
     });
     if (res.number !== undefined) {
         showToast(`✅ Result Set: ${res.number} (${res.color})`, 'success');
-        // Reset selection
+        lastClosedRoundDbId = null; // reset after result set
         selectedManualNum = null;
         document.querySelectorAll('[id^="mnum-"]').forEach(b => b.style.boxShadow = 'none');
         document.getElementById('setResultBtn').disabled = true;
