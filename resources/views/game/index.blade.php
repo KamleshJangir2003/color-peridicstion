@@ -72,11 +72,7 @@
 .bet-area{position:relative;}
 .bet-closed{position:absolute;inset:0;background:rgba(15,23,42,.88);border-radius:16px;display:none;align-items:center;justify-content:center;flex-direction:column;gap:8px;z-index:10;font-size:15px;font-weight:700;color:var(--red);}
 
-/* RESULT POPUP */
-.result-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;display:none;align-items:center;justify-content:center;}
-.result-popup{background:var(--card);border-radius:24px;padding:32px 24px;text-align:center;width:290px;animation:popIn .4s cubic-bezier(.175,.885,.32,1.275);}
-@keyframes popIn{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
-.result-circle{width:90px;height:90px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:900;margin:0 auto 16px;}
+
 
 /* HISTORY TABLE */
 .htable{width:100%;border-collapse:collapse;}
@@ -201,16 +197,7 @@
     </table>
 </div>
 
-<!-- RESULT POPUP -->
-<div class="result-overlay" id="resultOverlay" onclick="closeResult()">
-    <div class="result-popup" onclick="event.stopPropagation()">
-        <div class="result-circle" id="resultCircle">0</div>
-        <h2 id="resultTitle" style="font-size:22px;margin-bottom:6px;"></h2>
-        <p id="resultSub" style="color:var(--muted);font-size:13px;margin-bottom:16px;"></p>
-        <div id="resultWin" style="font-size:28px;font-weight:800;color:var(--gold);margin-bottom:16px;display:none;"></div>
-        <button class="place-btn" onclick="closeResult()">Continue Playing</button>
-    </div>
-</div>
+
 
 @endsection
 
@@ -444,7 +431,6 @@ async function waitForResult(roundId) {
     const poll = setInterval(async () => {
         attempts++;
         try {
-            // Check history for result
             const hist = await API('/game/history');
             const histRound = (hist.data || []).find(r => r.round_id == roundId);
             if (histRound) {
@@ -453,42 +439,17 @@ async function waitForResult(roundId) {
                 await loadMyBets();
                 await loadWallet();
                 await loadRound();
-                // Check if user won/lost
-                const bets = await API('/game/my-bets');
-                const myBet = (bets.data || []).find(b => b.round_id == roundId);
-                const winAmt = myBet?.status === 'won' ? parseFloat(myBet.win_amount || 0) : 0;
-                showResult(histRound.number, histRound.color, winAmt);
                 return;
             }
         } catch(e) {}
-        if (attempts >= 30) { // 60s max wait
+        if (attempts >= 30) {
             clearInterval(poll);
             await loadRound();
         }
     }, 2000);
 }
 
-// ── RESULT POPUP ──────────────────────────────────────────────
-function showResult(number, color, winAmt=0) {
-    const hex = {green:'#22C55E', red:'#EF4444', violet:'#A855F7'};
-    const c = document.getElementById('resultCircle');
-    c.textContent = number;
-    c.style.background = hex[color]||'#7C3AED';
-    c.style.color = '#fff';
-    document.getElementById('resultTitle').textContent = color.toUpperCase() + ' - ' + number;
-    document.getElementById('resultSub').textContent = 'Round result declared!';
-    const we = document.getElementById('resultWin');
-    if (winAmt > 0) {
-        we.textContent = '+₹' + winAmt + ' Won! 🎉';
-        we.style.display = 'block';
-        document.getElementById('resultTitle').textContent = '🎉 You Won!';
-    } else { we.style.display = 'none'; }
-    document.getElementById('resultOverlay').style.display = 'flex';
-    setTimeout(closeResult, 4000);
-}
-function closeResult() {
-    document.getElementById('resultOverlay').style.display = 'none';
-}
+
 
 // ── INIT ──────────────────────────────────────────────────────
 loadWallet();
